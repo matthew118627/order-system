@@ -102,7 +102,7 @@ const yilianyunProxy = createProxyMiddleware({
   target: 'https://open-api.10ss.net',
   changeOrigin: true,
   pathRewrite: {
-    '^/api/yilianyun': '' // 移除 /api/yilianyun 前綴
+    '^/api/yilianyun-proxy': '' // 移除 /api/yilianyun-proxy 前綴
   },
   onProxyReq: (proxyReq, req) => {
     // 添加必要的請求頭
