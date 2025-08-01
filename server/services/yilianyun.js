@@ -403,15 +403,19 @@ export async function printOrder(items, orderNumber) {
 
 // 格式化訂單內容，創建簡潔環保的收據格式
 function formatOrderContent(items, orderNumber) {
-  // 獲取當前日期時間（本地時間格式）
+  // 獲取當前日期時間（本地時間格式，12小時制）
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
-  const dateStr = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  
+  // 12小時制時間格式
+  let hours = now.getHours();
+  const ampm = hours >= 12 ? '下午' : '上午';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // 0 應該轉換為 12
+  const timeStr = `${ampm} ${String(hours).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+  const dateStr = `${year}-${month}-${day} ${timeStr}`;
 
   // 計算總金額和總數量
   const subtotal = items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);

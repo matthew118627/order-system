@@ -36,7 +36,7 @@ const OrderSummary = ({ items, onAdd, onRemove, onClear, total }) => {
           <div className="receipt-header">
             <h2>餐廳點餐單</h2>
             <p>訂單編號: {new Date().getTime()}</p>
-            <p>時間: {new Date().toLocaleString()}</p>
+            <p>時間: {new Date().toLocaleString('zh-TW', { hour12: true, hour: 'numeric', minute: '2-digit', second: '2-digit' })}</p>
           </div>
           
           <div className="receipt-items">
