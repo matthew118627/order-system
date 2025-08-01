@@ -36,7 +36,11 @@ import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CancelIcon from '@mui/icons-material/Cancel';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+// 使用 Vite 環境變量
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (import.meta.env.DEV ? 'http://localhost:3001/api' : 'https://order-system-production-9479.up.railway.app/api');
+
+console.log('API 基礎 URL:', API_BASE_URL);
 
 const ReportsPage = ({ onBack }) => {
   const [orders, setOrders] = useState([]);
@@ -310,18 +314,38 @@ const ReportsPage = ({ onBack }) => {
     
     // 應用日期範圍過濾
     if (dateRange.start || dateRange.end) {
-      const startDate = dateRange.start ? new Date(dateRange.start) : null;
-      const endDate = dateRange.end ? new Date(dateRange.end) : null;
+      let startDate = dateRange.start ? new Date(dateRange.start) : null;
+      let endDate = dateRange.end ? new Date(dateRange.end) : null;
       
       if (startDate) {
-        startDate.setHours(0, 0, 0, 0);
-        result = result.filter(order => order.createdAt >= startDate);
+        // 設置為當天開始時間 (本地時區)
+        startDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        console.log('過濾開始日期 (本地時區):', startDate);
+        
+        result = result.filter(order => {
+          if (!order.createdAt) return false;
+          // 將訂單日期轉換為本地時區的當天開始時間
+          const orderDate = order.createdAt instanceof Date ? order.createdAt : new Date(order.createdAt);
+          const orderDateStart = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate());
+          return orderDateStart >= startDate;
+        });
       }
       
       if (endDate) {
-        endDate.setHours(23, 59, 59, 999);
-        result = result.filter(order => order.createdAt <= endDate);
+        // 設置為當天結束時間 (本地時區)
+        endDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
+        console.log('過濾結束日期 (本地時區):', endDate);
+        
+        result = result.filter(order => {
+          if (!order.createdAt) return false;
+          // 將訂單日期轉換為本地時區的當天開始時間
+          const orderDate = order.createdAt instanceof Date ? order.createdAt : new Date(order.createdAt);
+          const orderDateStart = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate());
+          return orderDateStart <= endDate;
+        });
       }
+      
+      console.log('過濾後的訂單數量:', result.length, '開始日期:', startDate, '結束日期:', endDate);
     }
     
     // 應用排序
@@ -353,17 +377,42 @@ const ReportsPage = ({ onBack }) => {
   const calculateSalesData = () => {
     // 使用過濾後的訂單數據，排除已取消的訂單
     const validOrders = filteredOrders.filter(order => order.status !== 'cancelled');
-    const ordersToUse = validOrders.length > 0 ? validOrders : orders.filter(order => order.status !== 'cancelled');
+    // 只使用過濾後的訂單，不再回退到未過濾的 orders
+    const ordersToUse = validOrders;
+    
+    // 計算總銷售額和總數量
+    let totalRevenue = 0;
+    let totalQuantity = 0;
+    const totalOrders = new Set();
     
     // 將所有訂單的項目合併到一個數組
     const allItems = [];
     ordersToUse.forEach(order => {
+      // 確保訂單有 orderNumber
+      if (!order.orderNumber) return;
+      
+      totalOrders.add(order.orderNumber);
+      
+      // 確保訂單有 items 數組
+      if (!Array.isArray(order.items)) return;
+      
       order.items.forEach(item => {
+        if (!item) return;
+        
+        const itemQuantity = Number(item.quantity) || 1;
+        const itemPrice = Number(item.price) || 0;
+        const itemRevenue = itemPrice * itemQuantity;
+        
+        totalRevenue += itemRevenue;
+        totalQuantity += itemQuantity;
+        
         allItems.push({
           ...item,
-          date: order.createdAt.toLocaleDateString(),
+          date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '未知日期',
           orderNumber: order.orderNumber,
-          orderTime: order.createdAt
+          orderTime: order.createdAt ? new Date(order.createdAt) : new Date(),
+          itemRevenue: itemRevenue,
+          itemQuantity: itemQuantity
         });
       });
     });
@@ -371,6 +420,8 @@ const ReportsPage = ({ onBack }) => {
     // 按商品名稱分組計算
     const itemsMap = new Map();
     allItems.forEach(item => {
+      if (!item.name) return;
+      
       const key = item.name;
       if (!itemsMap.has(key)) {
         itemsMap.set(key, {
@@ -378,48 +429,71 @@ const ReportsPage = ({ onBack }) => {
           quantity: 0,
           revenue: 0,
           cost: 0,
-          orders: new Set(), // 記錄包含該商品的訂單ID
-          lastOrdered: null  // 最後一次訂購時間
+          orders: new Set(),
+          lastOrdered: null
         });
       }
-      const existing = itemsMap.get(key);
-      const itemQuantity = item.quantity || 1;
-      const itemRevenue = (item.price || 0) * itemQuantity;
       
-      existing.quantity += itemQuantity;
-      existing.revenue += itemRevenue;
-      existing.cost += itemRevenue * 0.4; // 假設成本為售價的40%
-      existing.orders.add(item.orderNumber);
+      const existing = itemsMap.get(key);
+      existing.quantity += item.itemQuantity;
+      existing.revenue += item.itemRevenue;
+      existing.cost += item.itemRevenue * 0.4; // 假設成本為售價的40%
+      
+      if (item.orderNumber) {
+        existing.orders.add(item.orderNumber);
+      }
       
       // 更新最後訂購時間
-      if (!existing.lastOrdered || item.orderTime > existing.lastOrdered) {
+      if (item.orderTime && (!existing.lastOrdered || item.orderTime > existing.lastOrdered)) {
         existing.lastOrdered = item.orderTime;
       }
     });
     
     // 轉換為數組並添加訂單數
-    const result = Array.from(itemsMap.values()).map(item => ({
+    const salesData = Array.from(itemsMap.values()).map(item => ({
       ...item,
-      orderCount: item.orders.size,
-      lastOrdered: item.lastOrdered ? item.lastOrdered.toLocaleDateString() : 'N/A'
+      orderCount: item.orders.size
     }));
     
-    // 按銷售額排序
-    return result.sort((a, b) => b.revenue - a.revenue);
+    // 計算總成本
+    const totalCost = salesData.reduce((sum, item) => sum + (item.cost || 0), 0);
+    
+    // 計算總利潤
+    const totalProfit = totalRevenue - totalCost;
+    
+    // 計算利潤率
+    const profitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+    
+    // 返回所有統計數據
+    return {
+      salesData,
+      summary: {
+        totalRevenue: parseFloat(totalRevenue.toFixed(2)),
+        totalQuantity,
+        totalOrders: totalOrders.size,
+        totalCost: parseFloat(totalCost.toFixed(2)),
+        totalProfit: parseFloat(totalProfit.toFixed(2)),
+        profitMargin: parseFloat(profitMargin.toFixed(2))
+      }
+    };
   };
 
-  const salesData = calculateSalesData();
-  const paginatedData = salesData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const { salesData, summary } = calculateSalesData();
+  const paginatedData = Array.isArray(salesData) 
+    ? salesData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) 
+    : [];
 
   // 計算總計
   const [cost, setCost] = useState(0);
   const [profit, setProfit] = useState(0);
 
-  const totals = salesData.reduce((acc, item) => ({
-    quantity: acc.quantity + item.quantity,
-    revenue: acc.revenue + item.revenue,
-    cost: acc.cost + item.cost,
-  }), { quantity: 0, revenue: 0, cost: 0 });
+  const totals = Array.isArray(salesData) 
+    ? salesData.reduce((acc, item) => ({
+        quantity: acc.quantity + (item.quantity || 0),
+        revenue: acc.revenue + (item.revenue || 0),
+        cost: acc.cost + (item.cost || 0),
+      }), { quantity: 0, revenue: 0, cost: 0 })
+    : { quantity: 0, revenue: 0, cost: 0 };
 
   // 當成本或收入變化時更新利潤
   useEffect(() => {

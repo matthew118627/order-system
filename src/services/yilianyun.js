@@ -64,20 +64,20 @@ async function getAccessToken() {
  * @returns {Promise} 打印任務ID
  */
 async function printOrder(orderItems, orderId) {
-  try {
-    // 轉換菜單項為後端期望的格式
-    const formattedItems = orderItems.map(item => ({
-      itemId: item.id.split('-')[0], // 移除時間戳部分
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity || 1,
-      specialRequest: item.specialRequest || '',
-      cookingStyle: item.cookingStyle || '',
-      mainIngredient: item.mainIngredient || '',
-      addOns: item.addOns || []
-    }));
+  // 轉換菜單項為後端期望的格式
+  const formattedItems = orderItems.map(item => ({
+    itemId: item.id.split('-')[0], // 移除時間戳部分
+    name: item.name,
+    price: item.price,
+    quantity: item.quantity || 1,
+    specialRequest: item.specialRequest || '',
+    cookingStyle: item.cookingStyle || '',
+    mainIngredient: item.mainIngredient || '',
+    addOns: item.addOns || []
+  }));
 
-    // 保存訂單到後端
+  // 保存訂單並發送到打印機
+  try {
     const response = await fetch(`${API_BASE_URL}/orders`, {
       method: 'POST',
       headers: {
@@ -96,86 +96,86 @@ async function printOrder(orderItems, orderId) {
       throw new Error(errorData.message || '保存訂單失敗');
     }
     
-    const orderData = await response.json();
-    
-    // 使用本地時間，確保時區正確
-    const now = new Date();
-    // 使用本地時間的各個部分
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    
-    const formattedTime = `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+    return await response.json();
+  } catch (error) {
+    console.error('保存訂單到後端時出錯:', error);
+    throw error; // 重新拋出錯誤，讓調用方處理
+  }
+  
+  // 然後發送打印請求
+  try {
+    const token = await getAccessToken();
     
     // 構建打印內容
     let content = '';
     content += `<CB>訂單 #${orderId}</CB><BR>`;
     content += '------------------------<BR>';
     content += '<B>餐廳點餐系統</B><BR>';
-    content += `時間: ${formattedTime}<BR>`;
+    content += `時間: ${new Date().toLocaleString()}<BR>`;
     content += '------------------------<BR>';
     content += '<B>商品名稱        數量   單價  小計</B><BR>';
     content += '------------------------<BR>';
     
     // 添加訂單項目
     orderItems.forEach(item => {
-      const itemTotal = item.price * (item.quantity || 1);
-      content += `${item.name}  x${item.quantity || 1}  $${item.price.toFixed(2)}  $${itemTotal.toFixed(2)}<BR>`;
+      const name = item.name.length > 10 ? item.name.substring(0, 10) + '...' : item.name;
+      const quantity = item.quantity || 1;
+      const price = item.price.toFixed(2);
+      const subtotal = (quantity * item.price).toFixed(2);
       
-      // 如果有特殊要求或備註，添加到打印內容中
+      content += `${name}<BR>`;
+      content += `  ${quantity} x ${price} = ${subtotal}<BR>`;
+      
+      // 如果有特殊要求，添加備註
       if (item.specialRequest) {
-        content += `  - ${item.specialRequest}<BR>`;
+        content += `  備註: ${item.specialRequest}<BR>`;
       }
-      
-      // 如果有烹飪方式或主料，添加到打印內容中
-      if (item.cookingStyle || item.mainIngredient) {
-        const details = [];
-        if (item.cookingStyle) details.push(item.cookingStyle);
-        if (item.mainIngredient) details.push(item.mainIngredient);
-        content += `  (${details.join(' + ')})\n`;
-      }
-      
-      // 如果有附加選項，添加到打印內容中
-      if (item.addOns && item.addOns.length > 0) {
-        item.addOns.forEach(addOn => {
-          content += `  + ${addOn}<BR>`;
-        });
-      }
-      
-      content += '------------------------<BR>';
     });
     
-    // 添加總計
-    const total = orderItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
+    content += '------------------------<BR>';
+    
+    // 計算總價
+    const total = orderItems.reduce((sum, item) => {
+      return sum + (item.price * (item.quantity || 1));
+    }, 0);
     
     content += `<RIGHT>總計: ${total.toFixed(2)}</RIGHT><BR>`;
     content += '------------------------<BR>';
     content += '<C>感謝您的惠顧！</C><BR>';
     content += '<C>歡迎再次光臨</C><BR>';
 
-    // 發送打印請求到後端 API
-    const printResponse = await fetch(`${API_BASE_URL}/yilianyun-proxy/print`, {
+    // 轉換菜單項為後端期望的格式
+    const formattedItems = orderItems.map(item => ({
+      itemId: item.id || Date.now().toString(),
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity || 1,
+      specialRequest: item.specialRequest || '',
+      cookingStyle: item.cookingStyle || '',
+      mainIngredient: item.mainIngredient || '',
+      addOns: item.addOns || []
+    }));
+
+    // 發送打印請求到後端
+    const response = await fetch(`${API_BASE_URL}/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        machineCode: MACHINE_CODE,
-        content: content,
-        originId: orderId
-      })
+        items: formattedItems,
+        subtotal: total,
+        customerNotes: ''
+      }),
     });
 
-    if (!printResponse.ok) {
-      const errorData = await printResponse.json();
-      throw new Error(errorData.message || '發送打印請求失敗');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || '打印請求失敗');
     }
 
-    const result = await printResponse.json();
-    return result.data?.id || 'unknown';
+    const data = await response.json();
+    return data.data?.printTaskId || 'unknown';
   } catch (error) {
     console.error('打印訂單時出錯:', error);
     throw error;

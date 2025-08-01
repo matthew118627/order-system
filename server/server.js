@@ -60,14 +60,9 @@ import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import connectDB from './config/db.js';
 
-// 設置時區
-process.env.TZ = 'Asia/Hong_Kong';
-console.log('服務器時區設置為:', process.env.TZ);
-
 // 導入路由
 import orderRoutes from './routes/orderRoutes.js';
 import authRoutes from './routes/authRoutes.js';
-import yilianyunRoutes from './routes/yilianyunRoutes.js';
 
 // 初始化 Express 應用
 const app = express();
@@ -102,7 +97,7 @@ const yilianyunProxy = createProxyMiddleware({
   target: 'https://open-api.10ss.net',
   changeOrigin: true,
   pathRewrite: {
-    '^/api/yilianyun-proxy': '' // 移除 /api/yilianyun-proxy 前綴
+    '^/api/yilianyun': '' // 移除 /api/yilianyun 前綴
   },
   onProxyReq: (proxyReq, req) => {
     // 添加必要的請求頭
@@ -132,8 +127,11 @@ const yilianyunProxy = createProxyMiddleware({
 // 路由
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
+
+// 易聯雲SDK路由
+import yilianyunRoutes from './routes/yilianyunRoutes.js';
 app.use('/api/yilianyun', yilianyunRoutes);
-app.use('/api/yilianyun-proxy', yilianyunProxy);
+app.use('/api/yilianyun', yilianyunProxy);
 
 // 健康檢查端點
 app.get('/api/health', (req, res) => {

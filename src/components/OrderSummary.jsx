@@ -165,10 +165,7 @@ const OrderSummary = ({
             variant="outlined"
             color="primary"
             size="large"
-            onClick={() => {
-              // 這裡可以添加預覽邏輯
-              console.log('預覽訂單', items);
-            }}
+            onClick={onPrintOrder}
             disabled={items.length === 0}
             sx={{ mb: 2 }}
           >
