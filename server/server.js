@@ -6,25 +6,34 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 加载根目录下的 .env 文件
-const envPath = path.resolve(process.cwd(), '.env');
-console.log('正在加载环境变量文件:', envPath);
+// 在生产环境中跳过加载 .env 文件
+if (process.env.NODE_ENV !== 'production') {
+  // 加载根目录下的 .env 文件（仅开发环境）
+  const envPath = path.resolve(process.cwd(), '.env');
+  console.log('正在加载环境变量文件:', envPath);
 
-try {
-  const result = dotenv.config({ path: envPath });
-  if (result.error) {
-    console.error('加载环境变量文件时出错:', result.error);
-    process.exit(1);
+  try {
+    const result = dotenv.config({ path: envPath });
+    if (result.error) {
+      console.warn('加载环境变量文件时出错（开发环境）:', result.error);
+      // 在开发环境中，如果.env文件不存在，只发出警告而不退出
+    } else {
+      console.log('环境变量文件加载成功（开发环境）');
+    }
+  } catch (error) {
+    console.warn('加载环境变量文件时发生错误（开发环境）:', error);
+    // 在开发环境中，如果.env文件不存在，只发出警告而不退出
   }
-  console.log('环境变量文件加载成功');
-  console.log('YILIANYUN_CLIENT_ID:', process.env.YILIANYUN_CLIENT_ID ? '已设置' : '未设置');
-  console.log('YILIANYUN_CLIENT_SECRET:', process.env.YILIANYUN_CLIENT_SECRET ? '已设置' : '未设置');
-  console.log('YILIANYUN_MACHINE_CODE:', process.env.YILIANYUN_MACHINE_CODE ? '已设置' : '未设置');
-  console.log('MONGODB_URI:', process.env.MONGODB_URI ? '已设置' : '未设置');
-} catch (error) {
-  console.error('加载环境变量文件时发生错误:', error);
-  process.exit(1);
 }
+
+// 输出当前环境变量状态（生产或开发环境）
+console.log('=== 环境变量状态 ===');
+console.log('NODE_ENV:', process.env.NODE_ENV || 'development');
+console.log('YILIANYUN_CLIENT_ID:', process.env.YILIANYUN_CLIENT_ID ? '已设置' : '未设置');
+console.log('YILIANYUN_CLIENT_SECRET:', process.env.YILIANYUN_CLIENT_SECRET ? '已设置' : '未设置');
+console.log('YILIANYUN_MACHINE_CODE:', process.env.YILIANYUN_MACHINE_CODE ? '已设置' : '未设置');
+console.log('MONGODB_URI:', process.env.MONGODB_URI ? '已设置' : '未设置');
+console.log('==================');
 
 // 检查必要的环境变量
 const requiredEnvVars = [
