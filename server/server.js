@@ -13,10 +13,15 @@ console.log('正在加载环境变量文件:', envPath);
 try {
   const result = dotenv.config({ path: envPath });
   if (result.error) {
-    console.error('加载环境变量文件时出错:', result.error);
-    process.exit(1);
+    if (result.error.code === 'ENOENT') {
+      console.log('未找到本地 .env 文件，将使用环境变量');
+    } else {
+      console.error('加载环境变量文件时出错:', result.error);
+      process.exit(1);
+    }
+  } else {
+    console.log('本地 .env 文件加载成功');
   }
-  console.log('环境变量文件加载成功');
   console.log('YILIANYUN_CLIENT_ID:', process.env.YILIANYUN_CLIENT_ID ? '已设置' : '未设置');
   console.log('YILIANYUN_CLIENT_SECRET:', process.env.YILIANYUN_CLIENT_SECRET ? '已设置' : '未设置');
   console.log('YILIANYUN_MACHINE_CODE:', process.env.YILIANYUN_MACHINE_CODE ? '已设置' : '未设置');
