@@ -133,7 +133,7 @@ const yilianyunProxy = createProxyMiddleware({
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/yilianyun', yilianyunRoutes);
-app.use('/api/yilianyun', yilianyunProxy);
+app.use('/api/yilianyun-proxy', yilianyunProxy);
 
 // 健康檢查端點
 app.get('/api/health', (req, res) => {

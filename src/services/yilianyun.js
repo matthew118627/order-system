@@ -157,7 +157,7 @@ async function printOrder(orderItems, orderId) {
     content += '<C>歡迎再次光臨</C><BR>';
 
     // 發送打印請求到後端 API
-    const printResponse = await fetch(`${API_BASE_URL}/yilianyun/print`, {
+    const printResponse = await fetch(`${API_BASE_URL}/yilianyun-proxy/print`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
