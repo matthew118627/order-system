@@ -60,9 +60,14 @@ import cors from 'cors';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import connectDB from './config/db.js';
 
+// 設置時區
+process.env.TZ = 'Asia/Hong_Kong';
+console.log('服務器時區設置為:', process.env.TZ);
+
 // 導入路由
 import orderRoutes from './routes/orderRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import yilianyunRoutes from './routes/yilianyunRoutes.js';
 
 // 初始化 Express 應用
 const app = express();
@@ -71,8 +76,18 @@ const PORT = process.env.PORT || 3001;
 // 連接 MongoDB 數據庫
 connectDB();
 
-// 中間件
-app.use(cors());
+// 啟用 CORS
+const corsOptions = {
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
+
+// 處理預檢請求
+app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -117,9 +132,6 @@ const yilianyunProxy = createProxyMiddleware({
 // 路由
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
-
-// 易聯雲SDK路由
-import yilianyunRoutes from './routes/yilianyunRoutes.js';
 app.use('/api/yilianyun', yilianyunRoutes);
 app.use('/api/yilianyun', yilianyunProxy);
 
