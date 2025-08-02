@@ -112,6 +112,8 @@ const yilianyunProxy = createProxyMiddleware({
 });
 
 // 路由
+import menuRoutes from './routes/menuRoutes.js';
+
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);

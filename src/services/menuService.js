@@ -1,9 +1,13 @@
-// 使用環境變量來設置 API 基礎 URL
-const isProduction = import.meta.env.PROD;
-const API_BASE_URL = isProduction 
-  ? 'https://order-system-production-9479.up.railway.app' 
-  : 'http://localhost:3001';
+// 始終使用生產環境 API 網址
+const API_BASE_URL = 'https://order-system-production-9479.up.railway.app';
 const API_URL = `${API_BASE_URL}/api/menu`;
+
+console.log('API 配置:', {
+  hostname: window.location.hostname,
+  href: window.location.href,
+  API_BASE_URL,
+  API_URL
+});
 
 export const getMenu = async () => {
   try {
