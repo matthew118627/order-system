@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import menuRoutes from './routes/menuRoutes.js';
 
 // 获取当前模块的目录名
 const __filename = fileURLToPath(import.meta.url);
@@ -59,7 +60,6 @@ import connectDB from './config/db.js';
 // 導入路由
 import orderRoutes from './routes/orderRoutes.js';
 import authRoutes from './routes/authRoutes.js';
-import menuRoutes from './routes/menuRoutes.js';
 
 // 初始化 Express 應用
 const app = express();
