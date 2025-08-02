@@ -152,9 +152,14 @@ app.use((err, req, res, next) => {
 });
 
 // 啟動服務器
-const server = app.listen(PORT, () => {
-  console.log(`服務器運行在 http://localhost:${PORT}`);
+const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+const server = app.listen(PORT, HOST, () => {
+  console.log(`服務器運行在 http://${HOST}:${PORT}`);
   console.log(`環境: ${process.env.NODE_ENV || 'development'}`);
+  
+  if (process.env.NODE_ENV === 'production') {
+    console.log('服務器正在監聽所有網絡接口 (0.0.0.0)');
+  }
 });
 
 // 處理未捕獲的 Promise 拒絕
