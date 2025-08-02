@@ -1,4 +1,9 @@
-const API_URL = 'http://localhost:3001/api/menu';
+// 使用環境變量來設置 API 基礎 URL
+const isProduction = import.meta.env.PROD;
+const API_BASE_URL = isProduction 
+  ? 'https://order-system-production-9479.up.railway.app' 
+  : 'http://localhost:3001';
+const API_URL = `${API_BASE_URL}/api/menu`;
 
 export const getMenu = async () => {
   try {
