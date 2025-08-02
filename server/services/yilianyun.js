@@ -441,9 +441,11 @@ function formatOrderContent(items, orderNumber) {
       `${String(index + 1).padStart(2, '0')}.${item.name} ${quantity}個   $${formattedTotal}`
     );
 
-    // 如果有特別要求，添加備註
-    if (item.specialRequest) {
-      content.push(`    備註: ${item.specialRequest}`);
+    // 如果有特別要求或備註，添加備註（使用放大和加粗效果）
+    if (item.specialRequest || item.notes) {
+      const note = item.specialRequest || item.notes;
+      // 使用 <CB> 標籤來實現加粗和放大效果
+      content.push(`    <CB>備註: ${note}</CB>`);
     }
 
     // 添加分隔線

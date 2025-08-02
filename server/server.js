@@ -59,6 +59,7 @@ import connectDB from './config/db.js';
 // 導入路由
 import orderRoutes from './routes/orderRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import menuRoutes from './routes/menuRoutes.js';
 
 // 初始化 Express 應用
 const app = express();
@@ -113,6 +114,7 @@ const yilianyunProxy = createProxyMiddleware({
 // 路由
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/menu', menuRoutes);
 
 // 易聯雲SDK路由
 import yilianyunRoutes from './routes/yilianyunRoutes.js';

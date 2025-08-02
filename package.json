@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "server": "node server/server.js",
     "start": "concurrently \"npm run server\" \"npm run dev\"",
-    "start:prod": "node server/server.js"
+    "start:prod": "node server/server.js",
+    "init:menu": "node server/scripts/initMenu.js"
   },
   "devDependencies": {
     "concurrently": "^9.2.0",

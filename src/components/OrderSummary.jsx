@@ -80,7 +80,19 @@ const OrderSummary = ({
                   <ListItemText
                     primary={item.name}
                     secondary={
-                      item.specialRequest && `備註: ${item.specialRequest}`
+                      (item.specialRequest || item.notes) && (
+                        <Typography 
+                          component="span" 
+                          variant="body2" 
+                          sx={{ 
+                            fontSize: '1.1rem',
+                            fontWeight: 'bold',
+                            color: 'text.primary'
+                          }}
+                        >
+                          備註: {item.specialRequest || item.notes}
+                        </Typography>
+                      )
                     }
                   />
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>

@@ -1,26 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Container, Box, AppBar, Toolbar, Typography, IconButton, 
-  Drawer, Badge, Tabs, Tab, useMediaQuery, useTheme
+  Drawer, Badge, Tabs, Tab, useMediaQuery, useTheme, Tooltip
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import CalculateIcon from '@mui/icons-material/Calculate';
-import { menuData } from './data/menuData';
+import BuildIcon from '@mui/icons-material/Build';
+// Menu data will be loaded from the backend
 import MenuSection from './components/MenuSection';
 import OrderSummary from './components/OrderSummary';
 import ReportsPage from './components/ReportsPage';
+import MenuEditor from './components/MenuEditor';
 import { printOrder } from './services/yilianyun';
+import { getMenu, updateMenu } from './services/menuService';
 
 function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [showReports, setShowReports] = useState(false);
+  const [showMenuEditor, setShowMenuEditor] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [filteredCategories, setFilteredCategories] = useState(menuData.categories);
+  const [filteredCategories, setFilteredCategories] = useState([]);
   const [orderItems, setOrderItems] = useState([]);
+  const [menuDataState, setMenuDataState] = useState({ categories: [] });
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  // 從後端加載菜單
+  useEffect(() => {
+    const loadMenu = async () => {
+      try {
+        const data = await getMenu();
+        if (data && data.categories) {
+          setMenuDataState(data);
+        }
+      } catch (error) {
+        console.error('加載菜單失敗:', error);
+      }
+    };
+
+    loadMenu();
+  }, []);
+
+  // 處理菜單更新
+  const handleMenuUpdate = (updatedCategories) => {
+    setMenuDataState({ ...menuDataState, categories: updatedCategories });
+    // 如果當前選中的分類不存在了，切換到全部
+    if (!updatedCategories.some(cat => cat.id === selectedCategory)) {
+      setSelectedCategory('all');
+    }
+  };
 
   // 处理分类切换
   const handleCategoryChange = (event, newValue) => {
@@ -36,13 +66,13 @@ function App() {
   // 根据选中的分类过滤菜单
   useEffect(() => {
     if (selectedCategory === 'all') {
-      setFilteredCategories(menuData.categories);
+      setFilteredCategories(menuDataState.categories);
     } else {
       setFilteredCategories(
-        menuData.categories.filter(cat => cat.id === selectedCategory)
+        menuDataState.categories.filter(cat => cat.id === selectedCategory)
       );
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, menuDataState]);
 
   const addToOrder = (item) => {
     setOrderItems(prevItems => {
@@ -146,6 +176,15 @@ function App() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             {showReports ? '銷售報表' : '餐廳點餐系統'}
           </Typography>
+          <Tooltip title="編輯菜單">
+            <IconButton 
+              color="inherit" 
+              onClick={() => setShowMenuEditor(true)}
+              sx={{ mr: 1 }}
+            >
+              <BuildIcon />
+            </IconButton>
+          </Tooltip>
           <IconButton color="inherit" onClick={toggleCart}>
             <Badge badgeContent={totalItems} color="error">
               <ShoppingCartIcon />
@@ -178,7 +217,7 @@ function App() {
                   allowScrollButtonsMobile
                 >
                   <Tab label="全部" value="all" sx={{ minWidth: 80, py: 1.5 }} />
-                  {menuData.categories.map((category) => (
+                  {menuDataState.categories.map((category) => (
                     <Tab 
                       key={category.id} 
                       label={category.name} 
@@ -222,6 +261,11 @@ function App() {
           isPrinting={isPrinting}
         />
       </Drawer>
+      <MenuEditor 
+        open={showMenuEditor}
+        onClose={() => setShowMenuEditor(false)}
+        onMenuUpdate={handleMenuUpdate}
+      />
     </Box>
   );
 }
