@@ -151,32 +151,30 @@ const ReportsPage = ({ onBack }) => {
     if (!selectedOrder) return;
     
     try {
-      // 使用與 OrderSummary 相同的打印邏輯
-      const response = await fetch(`${API_BASE_URL}/orders`, {
+      // 確保每個項目都有有效的 itemId
+      const itemsWithValidIds = selectedOrder.items.map(item => ({
+        ...item,
+        itemId: item.itemId || item.id?.split('-')[0] || 'default-id' // 確保 itemId 不為空
+      }));
+
+      // 調用重新列印端點
+      const response = await fetch(`${API_BASE_URL}/orders/reprint`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          orderId: selectedOrder._id,
+          items: itemsWithValidIds, // 傳入處理後的 items
           orderNumber: selectedOrder.orderNumber,
-          items: selectedOrder.items.map(item => ({
-            itemId: item.id ? item.id.split('-')[0] : '',
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity || 1,
-            specialRequest: item.specialRequest || '',
-            cookingStyle: item.cookingStyle || '',
-            mainIngredient: item.mainIngredient || '',
-            addOns: item.addOns || []
-          })),
-          subtotal: selectedOrder.items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0),
           phoneNumber: selectedOrder.phoneNumber || ''
         })
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || '列印失敗');
+        throw new Error(data.message || '重新列印失敗');
       }
 
       showSnackbar('訂單已重新發送到打印機', 'success');
