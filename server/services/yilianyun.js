@@ -260,7 +260,7 @@ export async function getAccessToken() {
 }
 
 // 打印訂單
-export async function printOrder(items, orderNumber) {
+export async function printOrder(items, orderNumber, phoneNumber = '') {
   try {
     console.log('\n=== 開始打印訂單 ===');
     console.log('訂單號:', orderNumber);
@@ -277,8 +277,8 @@ export async function printOrder(items, orderNumber) {
     
     console.log('獲取訪問令牌成功');
     
-    // 格式化訂單內容
-    const content = formatOrderContent(items, orderNumber);
+    // 格式化訂單內容，傳遞電話號碼
+    const content = formatOrderContent(items, orderNumber, phoneNumber);
     
     // 構建請求參數
     const params = {
