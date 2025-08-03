@@ -402,7 +402,7 @@ export async function printOrder(items, orderNumber) {
 }
 
 // 格式化訂單內容，創建簡潔環保的收據格式
-function formatOrderContent(items, orderNumber) {
+function formatOrderContent(items, orderNumber, phoneNumber = '') {
   // 初始化內容數組
   const content = [];
   
@@ -426,6 +426,7 @@ function formatOrderContent(items, orderNumber) {
   
   // 添加表頭
   content.push(
+    phoneNumber ? `<FS2>${phoneNumber}</FS2>` : '',
     '鮮 有限公司',
     `時間:${dateStr}`,
     '--------------------------------',
@@ -466,21 +467,8 @@ function formatOrderContent(items, orderNumber) {
     '\n\n\n'  // 添加空行（確保打印完成）
   );
   
-  // 添加打印控制指令（易聯雲專用）
-  // 注意：這裡的指令不會顯示在打印內容中
-  const printCommands = [
-    '<MN>1</MN>',  // 打印1聯
-    '<MK>1</MK>'    // 半切紙
-  ];
-  
-  // 組合所有內容和打印指令
-  const finalContent = [
-    ...content,
-    printCommands.join('')
-  ].join('\n');
-  
-  // 返回最終的打印內容
-  return finalContent;
+  // 直接返回內容，不添加任何打印指令
+  return content.join('\n');
 }
 // 獲取打印機狀態
 export async function getPrinterStatus() {

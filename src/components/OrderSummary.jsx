@@ -31,11 +31,22 @@ const OrderSummary = ({
   onBack,
   isPrinting = false,
 }) => {
+  const [phoneNumber, setPhoneNumber] = useState('');
   const total = subtotal; // 直接使用小计作为总计，不收取服务费
 
   const handleQuantityChange = (itemId, newQuantity) => {
     if (newQuantity < 1) return;
     onUpdateItem(itemId, { quantity: newQuantity });
+  };
+
+  const handlePhoneNumberChange = (e) => {
+    // 只允许数字输入
+    const value = e.target.value.replace(/\D/g, '');
+    setPhoneNumber(value);
+  };
+
+  const handlePrint = () => {
+    onPrintOrder(phoneNumber);
   };
 
   return (
@@ -149,14 +160,28 @@ const OrderSummary = ({
             </Grid>
           </Grid>
           
+          <TextField
+            fullWidth
+            label="電話號碼 (選填)"
+            variant="outlined"
+            value={phoneNumber}
+            onChange={handlePhoneNumberChange}
+            inputProps={{
+              inputMode: 'numeric',
+              pattern: '[0-9]*',
+              maxLength: 15,
+            }}
+            sx={{ mb: 2 }}
+            placeholder="請輸入電話號碼"
+          />
           <Button
             fullWidth
             variant="contained"
             color="primary"
             size="large"
-            onClick={onPrintOrder}
+            onClick={handlePrint}
             disabled={items.length === 0 || isPrinting}
-            sx={{ mt: 2, mb: 2, position: 'relative' }}
+            sx={{ mt: 1, mb: 2, position: 'relative' }}
           >
             {isPrinting ? (
               <>
@@ -177,7 +202,7 @@ const OrderSummary = ({
             variant="outlined"
             color="primary"
             size="large"
-            onClick={onPrintOrder}
+            onClick={handlePrint}
             disabled={items.length === 0}
             sx={{ mb: 2 }}
           >
