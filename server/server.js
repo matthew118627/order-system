@@ -126,7 +126,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/menu', menuRoutes);
 
 // 易聯雲SDK路由
-import yilianyunRoutes from './routes/yilianyunRoutes.js';
 app.use('/api/yilianyun', yilianyunRoutes);
 app.use('/api/yilianyun', yilianyunProxy);
 
