@@ -319,29 +319,47 @@ const ReportsPage = ({ onBack }) => {
       
       if (startDate) {
         // 設置為當天開始時間 (本地時區)
-        startDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-        console.log('過濾開始日期 (本地時區):', startDate);
+        startDate = new Date(
+          Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
+        );
+        console.log('過濾開始日期 (UTC):', startDate.toISOString());
         
         result = result.filter(order => {
           if (!order.createdAt) return false;
-          // 將訂單日期轉換為本地時區的當天開始時間
-          const orderDate = order.createdAt instanceof Date ? order.createdAt : new Date(order.createdAt);
-          const orderDateStart = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate());
-          return orderDateStart >= startDate;
+          // 將訂單日期轉換為 Date 對象
+          const orderDate = order.createdAt instanceof Date 
+            ? new Date(order.createdAt.getTime()) 
+            : new Date(order.createdAt);
+          
+          // 比較日期部分 (年、月、日)
+          const orderDateStr = orderDate.toISOString().split('T')[0];
+          const startDateStr = startDate.toISOString().split('T')[0];
+          
+          console.log('比較日期 - 訂單日期:', orderDateStr, '開始日期:', startDateStr);
+          return orderDateStr >= startDateStr;
         });
       }
       
       if (endDate) {
-        // 設置為當天結束時間 (本地時區)
-        endDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
-        console.log('過濾結束日期 (本地時區):', endDate);
+        // 設置為當天結束時間 (UTC)
+        endDate = new Date(
+          Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999)
+        );
+        console.log('過濾結束日期 (UTC):', endDate.toISOString());
         
         result = result.filter(order => {
           if (!order.createdAt) return false;
-          // 將訂單日期轉換為本地時區的當天開始時間
-          const orderDate = order.createdAt instanceof Date ? order.createdAt : new Date(order.createdAt);
-          const orderDateStart = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate());
-          return orderDateStart <= endDate;
+          // 將訂單日期轉換為 Date 對象
+          const orderDate = order.createdAt instanceof Date 
+            ? new Date(order.createdAt.getTime()) 
+            : new Date(order.createdAt);
+          
+          // 比較日期部分 (年、月、日)
+          const orderDateStr = orderDate.toISOString().split('T')[0];
+          const endDateStr = endDate.toISOString().split('T')[0];
+          
+          console.log('比較日期 - 訂單日期:', orderDateStr, '結束日期:', endDateStr);
+          return orderDateStr <= endDateStr;
         });
       }
       

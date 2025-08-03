@@ -130,7 +130,8 @@ router.patch('/:id', async (req, res) => {
 // 獲取所有訂單
 router.get('/', async (req, res) => {
   try {
-    const { status, startDate, endDate, page = 1, limit = 10 } = req.query;
+    console.log('收到獲取訂單請求，查詢參數:', req.query);
+    const { status, startDate, endDate } = req.query;
     
     // 構建查詢條件
     const query = {};
@@ -146,24 +147,30 @@ router.get('/', async (req, res) => {
       };
     }
     
-    // 分頁
-    const skip = (page - 1) * limit;
+    console.log('構建的查詢條件:', JSON.stringify(query, null, 2));
     
-    // 查詢訂單
+    // 查詢所有訂單（不分頁）
+    console.log('開始查詢所有訂單...');
+    const startTime = Date.now();
+    
+    // 查詢訂單（不分頁）
     const orders = await Order.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+      .sort({ createdAt: -1 });
+      
+    const total = orders.length;
+    const queryTime = Date.now() - startTime;
     
-    // 獲取總數
-    const total = await Order.countDocuments(query);
+    console.log(`查詢完成，共找到 ${total} 條訂單記錄，耗時 ${queryTime}ms`);
+    
+    if (orders.length > 0) {
+      console.log('第一條訂單日期:', orders[0].createdAt);
+      console.log('最後一條訂單日期:', orders[orders.length - 1].createdAt);
+    }
     
     res.json({
       success: true,
-      count: orders.length,
+      count: total,
       total,
-      page: parseInt(page),
-      pages: Math.ceil(total / limit),
       data: orders
     });
   } catch (error) {
