@@ -157,15 +157,15 @@ const ReportsPage = ({ onBack }) => {
         itemId: item.itemId || item.id?.split('-')[0] || 'default-id' // 確保 itemId 不為空
       }));
 
-      // 調用重新列印端點
-      const response = await fetch(`${API_BASE_URL}/orders/reprint`, {
+      // 調用重新列印端點 - 修正了 API 路徑
+      const response = await fetch(`${API_BASE_URL}/reprint`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           orderId: selectedOrder._id,
-          items: itemsWithValidIds, // 傳入處理後的 items
+          items: itemsWithValidIds,
           orderNumber: selectedOrder.orderNumber,
           phoneNumber: selectedOrder.phoneNumber || ''
         })

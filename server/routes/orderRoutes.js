@@ -316,4 +316,65 @@ router.post('/:orderNumber/reprint', async (req, res) => {
   }
 });
 
+// 重新列印訂單
+router.post('/reprint', async (req, res) => {
+  try {
+    const { orderId, items, orderNumber, phoneNumber } = req.body;
+    
+    if (!orderId) {
+      return res.status(400).json({
+        success: false,
+        message: '訂單ID不能為空'
+      });
+    }
+
+    // 查找訂單
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: '找不到指定的訂單'
+      });
+    }
+
+    // 使用傳入的項目或數據庫中的項目
+    const printItems = items || order.items;
+    const printOrderNumber = orderNumber || order.orderNumber;
+    const printPhoneNumber = phoneNumber || order.phoneNumber || '';
+
+    // 調用打印服務
+    const printTaskId = await printOrder(printItems, printOrderNumber, printPhoneNumber);
+    
+    // 更新訂單狀態
+    order.printStatus = 'reprinted';
+    order.printTaskId = printTaskId;
+    order.reprintedAt = new Date();
+    await order.save();
+
+    res.json({
+      success: true,
+      message: '訂單已重新發送到打印機',
+      data: {
+        orderId: order._id,
+        orderNumber: printOrderNumber,
+        printTaskId
+      }
+    });
+  } catch (error) {
+    console.error('重新列印訂單時出錯:', error);
+    
+    // 如果訂單存在但打印失敗，更新訂單狀態
+    if (order) {
+      order.printStatus = 'reprint_failed';
+      await order.save();
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: '重新列印訂單時出錯',
+      error: error.message
+    });
+  }
+});
+
 export default router;
