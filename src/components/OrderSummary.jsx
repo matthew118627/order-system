@@ -31,6 +31,25 @@ const OrderSummary = ({
   onBack,
   isPrinting = false,
 }) => {
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isPhoneValid, setIsPhoneValid] = useState(true);
+  
+  const handlePhoneChange = (e) => {
+    const value = e.target.value;
+    // 只允许输入数字
+    if (value === '' || /^\d*$/.test(value)) {
+      setPhoneNumber(value);
+      setIsPhoneValid(true);
+    }
+  };
+  
+  const handlePrint = () => {
+    if (phoneNumber && phoneNumber.length >= 8) {
+      onPrintOrder(phoneNumber);
+    } else {
+      setIsPhoneValid(false);
+    }
+  };
   const total = subtotal; // 直接使用小计作为总计，不收取服务费
 
   const handleQuantityChange = (itemId, newQuantity) => {
@@ -149,14 +168,33 @@ const OrderSummary = ({
             </Grid>
           </Grid>
           
+          {/* 电话号码输入 */}
+          <TextField
+            fullWidth
+            label="電話號碼"
+            variant="outlined"
+            value={phoneNumber}
+            onChange={handlePhoneChange}
+            error={!isPhoneValid}
+            helperText={!isPhoneValid ? "請輸入有效的電話號碼（至少8位數字）" : ""}
+            placeholder="請輸入您的電話號碼"
+            inputProps={{
+              maxLength: 20,
+              inputMode: 'numeric',
+              pattern: '\\d*',
+              style: { fontSize: '1.1rem' }
+            }}
+            sx={{ mb: 2, mt: 1 }}
+          />
+          
           <Button
             fullWidth
             variant="contained"
             color="primary"
             size="large"
-            onClick={onPrintOrder}
+            onClick={handlePrint}
             disabled={items.length === 0 || isPrinting}
-            sx={{ mt: 2, mb: 2, position: 'relative' }}
+            sx={{ mt: 1, mb: 2, position: 'relative' }}
           >
             {isPrinting ? (
               <>
@@ -177,7 +215,7 @@ const OrderSummary = ({
             variant="outlined"
             color="primary"
             size="large"
-            onClick={onPrintOrder}
+            onClick={handlePrint}
             disabled={items.length === 0}
             sx={{ mb: 2 }}
           >

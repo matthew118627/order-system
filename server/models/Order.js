@@ -29,6 +29,7 @@ const orderSchema = new mongoose.Schema({
     default: 'pending'
   },
   customerNotes: { type: String, default: '' },
+  phoneNumber: { type: String, default: '' },
   printStatus: {
     type: String,
     enum: ['pending', 'printed', 'failed'],

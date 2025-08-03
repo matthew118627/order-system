@@ -260,7 +260,7 @@ export async function getAccessToken() {
 }
 
 // 打印訂單
-export async function printOrder(items, orderNumber) {
+export async function printOrder(items, orderNumber, phoneNumber = '') {
   try {
     console.log('\n=== 開始打印訂單 ===');
     console.log('訂單號:', orderNumber);
@@ -277,8 +277,8 @@ export async function printOrder(items, orderNumber) {
     
     console.log('獲取訪問令牌成功');
     
-    // 格式化訂單內容
-    const content = formatOrderContent(items, orderNumber);
+    // 格式化訂單內容，傳入手機號碼
+    const content = formatOrderContent(items, orderNumber, phoneNumber);
     
     // 構建請求參數
     const params = {
@@ -402,7 +402,7 @@ export async function printOrder(items, orderNumber) {
 }
 
 // 格式化訂單內容，創建簡潔環保的收據格式
-function formatOrderContent(items, orderNumber) {
+function formatOrderContent(items, orderNumber, phoneNumber = '') {
   // 初始化內容數組
   const content = [];
   
@@ -418,19 +418,28 @@ function formatOrderContent(items, orderNumber) {
   hours = hours % 12;
   hours = hours ? hours : 12; // 0 應該轉換為 12
   const timeStr = `${ampm} ${String(hours).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-  const dateStr = `${year}-${month}-${day} ${timeStr}`;
+  const dateStr = `${day}-${month}-${year} ${timeStr}`;
 
   // 計算總金額和總數量
   const subtotal = items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
   const totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
   
+  // 添加電話號碼（如果存在）
+  if (phoneNumber && phoneNumber.trim()) {
+    // 使用易聯雲的打印指令來設置大字體
+    content.push(
+      `<CB>${phoneNumber.trim()}</CB>`,  // 使用CB標籤使文字居中並放大
+      ''  // 空行
+    );
+  }
+  
   // 添加表頭
   content.push(
     '鮮 有限公司',
     `時間:${dateStr}`,
-    '---------------------------------',
+    '--------------------------------',
     '品名  數量  小計',
-    '---------------------------------'
+    '--------------------------------'
   );
 
   // 添加每個商品
@@ -443,20 +452,13 @@ function formatOrderContent(items, orderNumber) {
     // 添加商品行
     content.push(`${itemNumber}.${item.name}  ${quantity}個   $${formattedTotal}`);
 
-    // 處理自定義菜品的備註
-    const note = item.specialRequest || item.notes || item.remarks || '';
-    // 處理備註陣列（如果存在）
-    const notes = Array.isArray(note) ? note : [note];
-    
-    // 添加所有備註
-    notes.forEach(noteItem => {
-      if (noteItem && noteItem.trim()) {
-        content.push(`備注:${noteItem.trim()}`);
-      }
-    });
+    // 處理特殊要求
+    if (item.specialRequest && item.specialRequest.trim()) {
+      content.push(`備注:${item.specialRequest.trim()}`);
+    }
 
     // 添加分隔線
-    content.push('---------------------------------');
+    content.push('--------------------------------');
   });
 
   // 添加總計
@@ -467,10 +469,17 @@ function formatOrderContent(items, orderNumber) {
   );
   
   // 添加打印控制指令（易聯雲專用）
-  content.push('<MN>1</MN>');  // 打印1聯
-  content.push('<MK>1</MK>');  // 半切紙
-
-  return content.join('\n');
+  // 注意：這裡的指令不會顯示在打印內容中
+  const printCommands = [
+    '<MN>1</MN>',  // 打印1聯
+    '<MK>1</MK>'    // 半切紙
+  ];
+  
+  // 返回內容和打印指令
+  return {
+    content: content.join('\n'),
+    printCommands: printCommands.join('')
+  };
 }
 // 獲取打印機狀態
 export async function getPrinterStatus() {
