@@ -425,8 +425,11 @@ function formatOrderContent(items, orderNumber, phoneNumber = '') {
   const totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
   
   // 添加表頭
+  if (phoneNumber && phoneNumber.trim()) {
+    content.push(`<FS2>${phoneNumber}</FS2>`);
+  }
+  
   content.push(
-    phoneNumber ? `<FS2>${phoneNumber}</FS2>` : '',
     '鮮 有限公司',
     `時間:${dateStr}`,
     '--------------------------------',
