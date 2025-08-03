@@ -36,6 +36,11 @@ const orderSchema = new mongoose.Schema({
   },
   printTaskId: { type: String, default: '' },
   printedAt: { type: Date, default: null },
+  phoneNumber: { 
+    type: String, 
+    default: '',
+    index: true
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

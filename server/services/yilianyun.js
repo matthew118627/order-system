@@ -445,7 +445,6 @@ function formatOrderContent(items, orderNumber, phoneNumber = '') {
   content.push(
     '鮮 有限公司',
     `時間:${dateStr}`,
-    `客戶編號: ${displayNumber}`,
     '--------------------------------',
     '品名            數量   金額',
     '--------------------------------'

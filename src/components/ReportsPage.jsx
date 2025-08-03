@@ -270,6 +270,8 @@ const ReportsPage = ({ onBack }) => {
           updatedAt: order.updatedAt ? new Date(order.updatedAt) : new Date(),
           // 確保每個訂單都有必要的字段
           orderNumber: order.orderNumber || `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          // 保留後端返回的 displayNumber，如果沒有則使用 phoneNumber 或 orderNumber
+          displayNumber: order.displayNumber || order.phoneNumber || (order.orderNumber || ''),
           items: order.items || [],
           subtotal: order.subtotal || 0,
           status: order.status || 'pending',

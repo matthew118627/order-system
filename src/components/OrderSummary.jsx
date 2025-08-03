@@ -177,7 +177,6 @@ const OrderSummary = ({
             inputProps={{
               maxLength: 30,
             }}
-            sx={{ mb: 2 }}
             placeholder="請輸入電話號碼或姓名"
             InputProps={{
               startAdornment: (
