@@ -280,16 +280,31 @@ export async function printOrder(items, orderNumber, phoneNumber = '') {
     // 格式化訂單內容，傳入手機號碼
     const content = formatOrderContent(items, orderNumber, phoneNumber);
     
+    // 確保 content 是字符串格式
+    let contentStr;
+    if (Array.isArray(content)) {
+      // 將數組轉換為字符串，每個元素用換行符連接
+      contentStr = content.join('\n');
+    } else if (typeof content === 'string') {
+      contentStr = content;
+    } else {
+      // 如果 content 不是數組也不是字符串，轉換為字符串
+      contentStr = String(content);
+    }
+    
     // 構建請求參數
     const params = {
       client_id: CLIENT_ID,
       access_token: token,
       machine_code: MACHINE_CODE,
-      content: content,
+      content: contentStr,  // 確保 content 是字符串
       origin_id: orderNumber,
       id: generateNonce(),
       timestamp: Math.floor(Date.now() / 1000).toString(),
     };
+    
+    // 調試日誌
+    console.log('打印內容 (前100個字符):', contentStr.substring(0, 100) + (contentStr.length > 100 ? '...' : ''));
 
     // 生成簽名
     console.log('\n=== 生成簽名 ===');
