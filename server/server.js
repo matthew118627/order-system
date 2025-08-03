@@ -1,7 +1,14 @@
+import express from 'express';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import menuRoutes from './routes/menuRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import yilianyunRoutes from './routes/yilianyunRoutes.js';
 
 // 获取当前模块的目录名
 const __filename = fileURLToPath(import.meta.url);
@@ -49,24 +56,26 @@ for (const envVar of requiredEnvVars) {
 }
 
 if (hasMissingEnv) {
-  console.error('錯誤：缺少必要的環境變量，請檢查 .env 文件');
+  console.error('錯誤：缺少必要的環境變量，請檢查 .env 文件或環境變量設置');
   process.exit(1);
 }
-import express from 'express';
-import cors from 'cors';
-import { createProxyMiddleware } from 'http-proxy-middleware';
-import connectDB from './config/db.js';
 
-// 導入路由
-import orderRoutes from './routes/orderRoutes.js';
-import authRoutes from './routes/authRoutes.js';
-
-// 初始化 Express 應用
+// 初始化 Express 应用
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// 連接 MongoDB 數據庫
-connectDB();
+// 中间件
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// 连接 MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB Connected:', mongoose.connection.host))
+  .catch(err => {
+    console.error('MongoDB 連接錯誤:', err);
+    process.exit(1);
+  });
 
 // 中間件
 app.use(cors());
