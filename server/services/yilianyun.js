@@ -289,7 +289,17 @@ export async function printOrder(orderData) {
     console.log('獲取訪問令牌成功');
     
     // 格式化訂單內容，傳遞電話號碼
-    console.log('調用 formatOrderContent 前，電話號碼:', phoneNumberStr || '空');
+    console.log('調用 formatOrderContent 前，參數:', {
+      itemsLength: items ? items.length : 'undefined',
+      orderNumber,
+      phoneNumber: phoneNumberStr || '空'
+    });
+    
+    if (!items || !Array.isArray(items)) {
+      console.error('錯誤：items 不是數組或未定義', items);
+      throw new Error('無效的訂單項目');
+    }
+    
     const content = formatOrderContent(items, orderNumber, phoneNumberStr);
     console.log('formatOrderContent 返回的內容:', content);
     
