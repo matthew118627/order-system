@@ -403,6 +403,9 @@ export async function printOrder(items, orderNumber) {
 
 // 格式化訂單內容，創建簡潔環保的收據格式
 function formatOrderContent(items, orderNumber) {
+  // 初始化內容數組
+  const content = [];
+  
   // 獲取當前日期時間（本地時間格式，12小時制）
   const now = new Date();
   const year = now.getFullYear();
@@ -420,42 +423,43 @@ function formatOrderContent(items, orderNumber) {
   // 計算總金額和總數量
   const subtotal = items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
   const totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
-
-  // 構建收據內容
-  let content = [
-    '<CB><L>      鮮 有限公司</L></CB>',
-    `時間:${dateStr}`,
+  
+  // 添加表頭
+  content.push(
+    '<FS><center>鮮 有限公司</center></FS>',
     '----------------------------',
-    '品名  數量  小計',
-    '----------------------------'
-  ];
+    `時間: ${dateStr}`
+  );
   
   // 添加訂單號（如果存在）
   if (orderNumber) {
-    content.splice(2, 0, `<CB>單號: ${orderNumber}</CB>`);
+    content.push(`單號: ${orderNumber}`);
   }
+  
+  content.push(
+    '----------------------------',
+    '<FB>品名        數量  小計</FB>',
+    '----------------------------'
+  );
 
   // 添加每個商品
-  items.forEach((item, index) => {
+  items.forEach((item) => {
     const quantity = item.quantity || 1;
     const itemTotal = item.price * quantity;
     const formattedTotal = itemTotal.toFixed(2);
 
-    // 添加商品行（移除前面的代碼，只顯示名稱）
-    content.push(
-      `${item.name} ${quantity}個   $${formattedTotal}`
-    );
+    // 添加商品行（使用FS2標籤放大字體）
+    content.push(`<FS2>${item.name} ${quantity}個   $${formattedTotal}</FS2>`);
 
     // 處理自定義菜品的備註
     const note = item.specialRequest || item.notes || item.remarks || '';
     // 處理備註陣列（如果存在）
     const notes = Array.isArray(note) ? note : [note];
     
-    // 添加所有備註（使用放大和加粗效果）
+    // 添加所有備註（使用FS2標籤放大字體）
     notes.forEach(noteItem => {
       if (noteItem && noteItem.trim()) {
-        // 使用 <CB> 和 <L> 標籤來實現加粗和放大效果
-        content.push(`    <CB><L>備註: ${noteItem.trim()}</L></CB>`);
+        content.push(`<FS2><FB>    備註: ${noteItem.trim()}</FB></FS2>`);
       }
     });
 
@@ -463,15 +467,18 @@ function formatOrderContent(items, orderNumber) {
     content.push('----------------------------');
   });
 
-  // 添加總計
+  // 添加總計（使用FS2標籤放大字體）
   content.push(
-    `數量:${totalQuantity}`,
-    `實付:${subtotal.toFixed(2)}`
+    `數量: ${totalQuantity}    實付: $${subtotal.toFixed(2)}`,
+    '\n\n\n'  // 添加空行（確保打印完成）
   );
+  
+  // 添加打印控制指令（易聯雲專用）
+  content.push('<MN>1</MN>');  // 打印1聯
+  content.push('<MK>1</MK>');  // 半切紙
 
   return content.join('\n');
 }
-
 // 獲取打印機狀態
 export async function getPrinterStatus() {
 try {
