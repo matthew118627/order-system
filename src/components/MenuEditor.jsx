@@ -18,7 +18,6 @@ const MenuEditor = ({ open, onClose, onMenuUpdate }) => {
     name: '',
     price: 0,
     type: 'simple',
-    baseName: '',
     methods: []
   });
   const [newCategory, setNewCategory] = useState({
@@ -257,14 +256,6 @@ const MenuEditor = ({ open, onClose, onMenuUpdate }) => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="基本名稱"
-                  value={newItem.baseName}
-                  onChange={(e) => setNewItem({ ...newItem, baseName: e.target.value })}
-                  margin="normal"
-                  helperText="例如：鯇魚腩"
-                />
-                <TextField
-                  fullWidth
                   label="做法 (用逗號分隔)"
                   value={newItem.methods?.join(', ')}
                   onChange={(e) =>
@@ -290,7 +281,6 @@ const MenuEditor = ({ open, onClose, onMenuUpdate }) => {
                     name: '',
                     price: 0,
                     type: 'simple',
-                    baseName: '',
                     methods: []
                   });
                 }}

@@ -436,15 +436,6 @@ function formatOrderContent(items, orderNumber, phoneNumber = '') {
   const totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
   
   // 添加表頭
-  console.log('準備添加電話號碼到收據，phoneNumber:', phoneNumber);
-  if (phoneNumber && phoneNumber.trim()) {
-    const phoneLine = `<FS2>${phoneNumber}</FS2>`;
-    console.log('正在添加電話號碼行:', phoneLine);
-    content.push(phoneLine);
-  } else {
-    console.log('未添加電話號碼，因為 phoneNumber 為空或僅包含空白字符');
-  }
-  
   content.push(
     '鮮 有限公司',
     `時間:${dateStr}`,
@@ -482,9 +473,19 @@ function formatOrderContent(items, orderNumber, phoneNumber = '') {
   // 添加總計
   content.push(
     `數量:${totalQuantity}`,
-    `實付:$${subtotal.toFixed(1)}`,
-    '\n\n\n'  // 添加空行（確保打印完成）
+    `實付:$${subtotal.toFixed(1)}`
   );
+  
+  // 添加電話號碼（如果有）
+  if (phoneNumber && phoneNumber.trim()) {
+    console.log('正在添加電話號碼到收據底部:', phoneNumber);
+    content.push(phoneNumber.trim());
+  } else {
+    console.log('未添加電話號碼，因為 phoneNumber 為空或僅包含空白字符');
+  }
+  
+  // 添加空行（確保打印完成）
+  content.push('\n\n\n');
   
   // 直接返回內容，不添加任何打印指令
   return content.join('\n');

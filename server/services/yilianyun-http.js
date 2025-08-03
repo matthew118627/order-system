@@ -207,9 +207,10 @@ export async function getAccessToken() {
  * @param {string} machineCode 打印機終端號
  * @param {string} content 打印內容
  * @param {string} [accessToken] 訪問令牌，如果未提供將自動獲取
+ * @param {string} [phoneNumber] 客戶電話號碼
  * @returns {Promise<Object>} 打印結果
  */
-export async function printOrder(machineCode, content, accessToken) {
+export async function printOrder(machineCode, content, accessToken, phoneNumber) {
   try {
     console.log("正在發送打印請求...");
     
@@ -245,8 +246,15 @@ export async function printOrder(machineCode, content, accessToken) {
     if (machineCode) {
       params.append("machine_code", String(machineCode));
     }
-    if (content) {
-      params.append("content", String(content));
+    
+    // 處理打印內容，添加電話號碼
+    let printContent = String(content);
+    if (phoneNumber && phoneNumber.trim()) {
+      printContent = printContent.replace(/\n{0,2}$/, '') + '\n' + phoneNumber.trim() + '\n\n\n';
+    }
+    
+    if (printContent) {
+      params.append("content", printContent);
     }
     if (originId) {
       params.append("origin_id", String(originId));
