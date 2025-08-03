@@ -408,7 +408,7 @@ function formatOrderContent(items, orderNumber) {
   
   // 獲取當前日期時間（本地時間格式，12小時制）
   const now = new Date();
-  const year = now.getFullYear();
+  const year = now.getFullYear().toString().slice(-2); // 只取後兩位數年份
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   
@@ -426,50 +426,43 @@ function formatOrderContent(items, orderNumber) {
   
   // 添加表頭
   content.push(
-    '<FS><center>鮮 有限公司</center></FS>',
-    '----------------------------',
-    `時間: ${dateStr}`
-  );
-  
-  // 添加訂單號（如果存在）
-  if (orderNumber) {
-    content.push(`單號: ${orderNumber}`);
-  }
-  
-  content.push(
-    '----------------------------',
-    '<FB>品名        數量  小計</FB>',
-    '----------------------------'
+    '鮮 有限公司',
+    `時間:${dateStr}`,
+    '---------------------------------',
+    '品名  數量  小計',
+    '---------------------------------'
   );
 
   // 添加每個商品
-  items.forEach((item) => {
+  items.forEach((item, index) => {
     const quantity = item.quantity || 1;
     const itemTotal = item.price * quantity;
-    const formattedTotal = itemTotal.toFixed(2);
+    const formattedTotal = itemTotal.toFixed(1); // 保留一位小數
+    const itemNumber = (index + 1).toString().padStart(2, '0'); // 兩位數序號
 
-    // 添加商品行（使用FS2標籤放大字體）
-    content.push(`<FS2>${item.name} ${quantity}個   $${formattedTotal}</FS2>`);
+    // 添加商品行
+    content.push(`${itemNumber}.${item.name}  ${quantity}個   $${formattedTotal}`);
 
     // 處理自定義菜品的備註
     const note = item.specialRequest || item.notes || item.remarks || '';
     // 處理備註陣列（如果存在）
     const notes = Array.isArray(note) ? note : [note];
     
-    // 添加所有備註（使用FS2標籤放大字體）
+    // 添加所有備註
     notes.forEach(noteItem => {
       if (noteItem && noteItem.trim()) {
-        content.push(`<FS2><FB>    備註: ${noteItem.trim()}</FB></FS2>`);
+        content.push(`備注:${noteItem.trim()}`);
       }
     });
 
     // 添加分隔線
-    content.push('----------------------------');
+    content.push('---------------------------------');
   });
 
-  // 添加總計（使用FS2標籤放大字體）
+  // 添加總計
   content.push(
-    `數量: ${totalQuantity}    實付: $${subtotal.toFixed(2)}`,
+    `數量:${totalQuantity}`,
+    `實付:$${subtotal.toFixed(1)}`,
     '\n\n\n'  // 添加空行（確保打印完成）
   );
   
