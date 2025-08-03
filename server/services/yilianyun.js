@@ -481,8 +481,8 @@ function formatOrderContent(items, orderNumber, phoneNumber = '') {
     console.log('正在添加電話號碼到收據底部:', phoneNumber);
     // 添加分隔線
     content.push('--------------------------------');
-    // 添加電話號碼
-    content.push(phoneNumber.trim());
+    // 添加電話號碼（使用FS2標籤使字體變大加粗）
+    content.push(`<FS2>${phoneNumber.trim()}</FS2>`);
     // 添加換行符確保打印完成
     content.push('\n\n\n');
   } else {
