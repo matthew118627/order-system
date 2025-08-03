@@ -29,14 +29,29 @@ router.post('/init', async (req, res) => {
 // 獲取完整菜單
 router.get('/', async (req, res) => {
   try {
-    const menu = await Menu.findOne();
+    console.log('收到獲取菜單請求');
+    let menu = await Menu.findOne();
+    
+    // 如果沒有找到菜單，創建一個空的
     if (!menu) {
-      return res.status(404).json({ message: '菜單未找到' });
+      console.log('未找到現有菜單，創建新菜單...');
+      menu = new Menu({
+        categories: [],
+        lastUpdated: new Date()
+      });
+      await menu.save();
+      console.log('已創建新菜單');
     }
+    
+    console.log('返回菜單數據:', JSON.stringify(menu, null, 2));
     res.json(menu);
   } catch (error) {
     console.error('獲取菜單錯誤:', error);
-    res.status(500).json({ message: '服務器錯誤', error: error.message });
+    res.status(500).json({ 
+      message: '服務器錯誤', 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
