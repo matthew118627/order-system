@@ -27,7 +27,11 @@ import {
   DialogActions,
   TableSortLabel,
   Chip,
-  Grid
+  Grid,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PrintIcon from '@mui/icons-material/Print';
@@ -35,6 +39,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CancelIcon from '@mui/icons-material/Cancel';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 // 使用 Vite 環境變量
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
@@ -61,6 +66,8 @@ const ReportsPage = ({ onBack }) => {
   const [orderToCancel, setOrderToCancel] = useState(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [canceling, setCanceling] = useState(false);
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -126,13 +133,68 @@ const ReportsPage = ({ onBack }) => {
     </Dialog>
   );
 
+  // 處理菜單打開
+  const handleMenuOpen = (event, order) => {
+    event.stopPropagation();
+    setMenuAnchorEl(event.currentTarget);
+    setSelectedOrder(order);
+  };
+
+  // 處理菜單關閉
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setSelectedOrder(null);
+  };
+
+  // 重新列印訂單
+  const handleReprintOrder = async () => {
+    if (!selectedOrder) return;
+    
+    try {
+      // 使用與 OrderSummary 相同的打印邏輯
+      const response = await fetch(`${API_BASE_URL}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderNumber: selectedOrder.orderNumber,
+          items: selectedOrder.items.map(item => ({
+            itemId: item.id ? item.id.split('-')[0] : '',
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity || 1,
+            specialRequest: item.specialRequest || '',
+            cookingStyle: item.cookingStyle || '',
+            mainIngredient: item.mainIngredient || '',
+            addOns: item.addOns || []
+          })),
+          subtotal: selectedOrder.items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0),
+          phoneNumber: selectedOrder.phoneNumber || ''
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || '列印失敗');
+      }
+
+      showSnackbar('訂單已重新發送到打印機', 'success');
+    } catch (error) {
+      console.error('重新列印訂單時出錯:', error);
+      showSnackbar(`重新列印失敗: ${error.message}`, 'error');
+    } finally {
+      handleMenuClose();
+    }
+  };
+
   // 取消訂單
   const handleCancelOrder = async () => {
-    if (!orderToCancel) return;
+    if (!selectedOrder) return;
     
     try {
       setCanceling(true);
-      const url = `${API_BASE_URL}/orders/${orderToCancel._id}`;
+      const url = `${API_BASE_URL}/orders/${selectedOrder._id}`;
       console.log('發送取消訂單請求到:', url);
       
       const response = await fetch(url, {
@@ -158,14 +220,13 @@ const ReportsPage = ({ onBack }) => {
       
       // 更新本地狀態
       const updatedOrders = orders.map(order => 
-        order._id === orderToCancel._id 
+        order._id === selectedOrder._id 
           ? { ...order, status: 'cancelled', updatedAt: new Date().toISOString() } 
           : order
       );
       
       setOrders(updatedOrders);
       setFilteredOrders(updatedOrders);
-      setCancelDialogOpen(false);
       showSnackbar('訂單已成功取消', 'success');
     } catch (error) {
       console.error('取消訂單時出錯:', error);
@@ -175,7 +236,7 @@ const ReportsPage = ({ onBack }) => {
       showSnackbar(errorMessage, 'error');
     } finally {
       setCanceling(false);
-      setOrderToCancel(null);
+      handleMenuClose();
     }
   };
 
@@ -609,20 +670,13 @@ const ReportsPage = ({ onBack }) => {
                   />
                 </TableCell>
                 <TableCell align="center">
-                  {order.status !== 'cancelled' && (
-                    <IconButton 
-                      size="small" 
-                      color="error"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOrderToCancel(order);
-                        setCancelDialogOpen(true);
-                      }}
-                      title="取消訂單"
-                    >
-                      <CancelIcon fontSize="small" />
-                    </IconButton>
-                  )}
+                  <IconButton 
+                    size="small"
+                    onClick={(e) => handleMenuOpen(e, order)}
+                    disabled={order.status === 'cancelled'}
+                  >
+                    <MoreVertIcon fontSize="small" />
+                  </IconButton>
                 </TableCell>
               </TableRow>
             ))}
@@ -723,6 +777,41 @@ const ReportsPage = ({ onBack }) => {
     </TableContainer>
   );
 
+  // 渲染操作菜單
+  const renderMenu = () => (
+    <Menu
+      anchorEl={menuAnchorEl}
+      open={Boolean(menuAnchorEl)}
+      onClose={handleMenuClose}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <MenuItem 
+        onClick={() => {
+          handleReprintOrder();
+          handleMenuClose();
+        }}
+      >
+        <ListItemIcon>
+          <PrintIcon fontSize="small" />
+        </ListItemIcon>
+        <ListItemText>重新列印</ListItemText>
+      </MenuItem>
+      <MenuItem 
+        onClick={() => {
+          setOrderToCancel(selectedOrder);
+          setCancelDialogOpen(true);
+          handleMenuClose();
+        }}
+        disabled={!selectedOrder || selectedOrder.status === 'cancelled'}
+      >
+        <ListItemIcon>
+          <CancelIcon fontSize="small" color="error" />
+        </ListItemIcon>
+        <ListItemText primaryTypographyProps={{ color: 'error' }}>取消訂單</ListItemText>
+      </MenuItem>
+    </Menu>
+  );
+
   return (
     <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -754,10 +843,6 @@ const ReportsPage = ({ onBack }) => {
         </Box>
       </Box>
       
-      {renderFilterDialog()}
-      {renderCancelDialog()}
-      
-      {/* 通知組件 */}
       <Snackbar 
         open={snackbar.open} 
         autoHideDuration={6000} 
@@ -785,6 +870,10 @@ const ReportsPage = ({ onBack }) => {
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         {activeTab === 0 ? renderSalesTable() : renderOrderTable()}
       </Box>
+      
+      {renderMenu()}
+      {renderCancelDialog()}
+      {renderFilterDialog()}
     </Box>
   );
 };
