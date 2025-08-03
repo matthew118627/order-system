@@ -260,7 +260,7 @@ export async function getAccessToken() {
 }
 
 // 打印訂單
-export async function printOrder(items, orderNumber, phoneNumber = '') {
+export async function printOrder(items, orderNumber) {
   try {
     console.log('\n=== 開始打印訂單 ===');
     console.log('訂單號:', orderNumber);
@@ -277,34 +277,19 @@ export async function printOrder(items, orderNumber, phoneNumber = '') {
     
     console.log('獲取訪問令牌成功');
     
-    // 格式化訂單內容，傳入手機號碼
-    const content = formatOrderContent(items, orderNumber, phoneNumber);
-    
-    // 確保 content 是字符串格式
-    let contentStr;
-    if (Array.isArray(content)) {
-      // 將數組轉換為字符串，每個元素用換行符連接
-      contentStr = content.join('\n');
-    } else if (typeof content === 'string') {
-      contentStr = content;
-    } else {
-      // 如果 content 不是數組也不是字符串，轉換為字符串
-      contentStr = String(content);
-    }
+    // 格式化訂單內容
+    const content = formatOrderContent(items, orderNumber);
     
     // 構建請求參數
     const params = {
       client_id: CLIENT_ID,
       access_token: token,
       machine_code: MACHINE_CODE,
-      content: contentStr,  // 確保 content 是字符串
+      content: content,
       origin_id: orderNumber,
       id: generateNonce(),
       timestamp: Math.floor(Date.now() / 1000).toString(),
     };
-    
-    // 調試日誌
-    console.log('打印內容 (前100個字符):', contentStr.substring(0, 100) + (contentStr.length > 100 ? '...' : ''));
 
     // 生成簽名
     console.log('\n=== 生成簽名 ===');
@@ -417,7 +402,7 @@ export async function printOrder(items, orderNumber, phoneNumber = '') {
 }
 
 // 格式化訂單內容，創建簡潔環保的收據格式
-function formatOrderContent(items, orderNumber, phoneNumber = '') {
+function formatOrderContent(items, orderNumber) {
   // 初始化內容數組
   const content = [];
   
@@ -433,20 +418,11 @@ function formatOrderContent(items, orderNumber, phoneNumber = '') {
   hours = hours % 12;
   hours = hours ? hours : 12; // 0 應該轉換為 12
   const timeStr = `${ampm} ${String(hours).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-  const dateStr = `${day}-${month}-${year} ${timeStr}`;
+  const dateStr = `${year}-${month}-${day} ${timeStr}`;
 
   // 計算總金額和總數量
   const subtotal = items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
   const totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
-  
-  // 添加電話號碼（如果存在）
-  if (phoneNumber && phoneNumber.trim()) {
-    // 使用易聯雲的打印指令來設置大字體
-    content.push(
-      `<CB>${phoneNumber.trim()}</CB>`,  // 使用CB標籤使文字居中並放大
-      ''  // 空行
-    );
-  }
   
   // 添加表頭
   content.push(
@@ -467,10 +443,17 @@ function formatOrderContent(items, orderNumber, phoneNumber = '') {
     // 添加商品行
     content.push(`${itemNumber}.${item.name}  ${quantity}個   $${formattedTotal}`);
 
-    // 處理特殊要求
-    if (item.specialRequest && item.specialRequest.trim()) {
-      content.push(`備注:${item.specialRequest.trim()}`);
-    }
+    // 處理自定義菜品的備註
+    const note = item.specialRequest || item.notes || item.remarks || '';
+    // 處理備註陣列（如果存在）
+    const notes = Array.isArray(note) ? note : [note];
+    
+    // 添加所有備註
+    notes.forEach(noteItem => {
+      if (noteItem && noteItem.trim()) {
+        content.push(`備注:${noteItem.trim()}`);
+      }
+    });
 
     // 添加分隔線
     content.push('--------------------------------');
@@ -495,6 +478,8 @@ function formatOrderContent(items, orderNumber, phoneNumber = '') {
     content: content.join('\n'),
     printCommands: printCommands.join('')
   };
+
+  return content.join('\n');
 }
 // 獲取打印機狀態
 export async function getPrinterStatus() {

@@ -8,7 +8,7 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   console.log('收到創建訂單請求:', JSON.stringify(req.body, null, 2));
   try {
-    const { items, subtotal, customerNotes, phoneNumber } = req.body;
+    const { items, subtotal, customerNotes } = req.body;
     
     if (!items || !Array.isArray(items) || items.length === 0) {
       console.error('無效的訂單項目:', items);
@@ -28,7 +28,6 @@ router.post('/', async (req, res) => {
       items,
       subtotal,
       customerNotes,
-      phoneNumber: phoneNumber || '',
       status: 'pending'
     });
 
@@ -36,8 +35,8 @@ router.post('/', async (req, res) => {
     const savedOrder = await order.save();
     
     try {
-      // 嘗試打印訂單，傳遞電話號碼
-      const printTaskId = await printOrder(items, orderNumber, phoneNumber);
+      // 嘗試打印訂單
+      const printTaskId = await printOrder(items, orderNumber);
       
       // 更新訂單打印狀態
       savedOrder.printStatus = 'printed';

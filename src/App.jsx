@@ -106,7 +106,7 @@ function App() {
 
   const [isPrinting, setIsPrinting] = useState(false);
 
-  const handlePrintOrder = async (phoneNumber = '') => {
+  const handlePrintOrder = async () => {
     if (orderItems.length === 0) return;
     if (isPrinting) return; // 防止重複點擊
     
@@ -116,8 +116,8 @@ function App() {
       // 生成訂單號 (使用時間戳+隨機數)
       const orderId = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       
-      // 調用打印服務，傳入手機號碼
-      await printOrder(orderItems, orderId, phoneNumber);
+      // 調用打印服務
+      await printOrder(orderItems, orderId);
       
       // 打印成功後清空購物車
       setOrderItems([]);

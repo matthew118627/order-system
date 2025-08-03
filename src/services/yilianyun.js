@@ -61,10 +61,9 @@ async function getAccessToken() {
  * 發送打印請求並保存訂單到後端
  * @param {Array} orderItems 訂單項目數組
  * @param {string} orderId 訂單ID
- * @param {string} phoneNumber 客戶電話號碼
  * @returns {Promise} 打印任務ID
  */
-async function printOrder(orderItems, orderId, phoneNumber = '') {
+async function printOrder(orderItems, orderId) {
   // 轉換菜單項為後端期望的格式
   const formattedItems = orderItems.map(item => ({
     itemId: item.id.split('-')[0], // 移除時間戳部分
@@ -87,8 +86,7 @@ async function printOrder(orderItems, orderId, phoneNumber = '') {
       body: JSON.stringify({
         orderNumber: orderId,
         items: formattedItems,
-        subtotal: orderItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0),
-        phoneNumber: phoneNumber // 添加電話號碼到請求體
+        subtotal: orderItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0)
       })
     });
 
