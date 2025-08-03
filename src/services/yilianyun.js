@@ -61,9 +61,12 @@ async function getAccessToken() {
  * 發送打印請求並保存訂單到後端
  * @param {Array} orderItems 訂單項目數組
  * @param {string} orderId 訂單ID
+ * @param {string} phoneNumber 客戶電話號碼
  * @returns {Promise} 打印任務ID
  */
-async function printOrder(orderItems, orderId) {
+async function printOrder(orderItems, orderId, phoneNumber = '') {
+  console.log('準備發送打印請求，電話號碼:', phoneNumber);
+  
   // 轉換菜單項為後端期望的格式
   const formattedItems = orderItems.map(item => ({
     itemId: item.id.split('-')[0], // 移除時間戳部分
@@ -76,6 +79,19 @@ async function printOrder(orderItems, orderId) {
     addOns: item.addOns || []
   }));
 
+  // 計算總金額
+  const subtotal = orderItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
+  
+  // 構建請求體
+  const requestBody = {
+    items: formattedItems,
+    orderNumber: orderId,
+    phoneNumber: phoneNumber ? String(phoneNumber).trim() : '',
+    subtotal: subtotal
+  };
+  
+  console.log('發送到後端的請求體:', JSON.stringify(requestBody, null, 2));
+
   // 保存訂單並發送到打印機
   try {
     const response = await fetch(`${API_BASE_URL}/orders`, {
@@ -83,11 +99,7 @@ async function printOrder(orderItems, orderId) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        orderNumber: orderId,
-        items: formattedItems,
-        subtotal: orderItems.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0)
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {

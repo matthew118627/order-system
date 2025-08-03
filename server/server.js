@@ -123,6 +123,7 @@ const yilianyunProxy = createProxyMiddleware({
 // 路由
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api', yilianyunRoutes); // 添加易聯雲相關路由
 app.use('/api/menu', menuRoutes);
 
 // 易聯雲SDK路由
