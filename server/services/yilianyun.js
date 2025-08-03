@@ -473,13 +473,14 @@ function formatOrderContent(items, orderNumber) {
     '<MK>1</MK>'    // 半切紙
   ];
   
-  // 返回內容和打印指令
-  return {
-    content: content.join('\n'),
-    printCommands: printCommands.join('')
-  };
-
-  return content.join('\n');
+  // 組合所有內容和打印指令
+  const finalContent = [
+    ...content,
+    printCommands.join('')
+  ].join('\n');
+  
+  // 返回最終的打印內容
+  return finalContent;
 }
 // 獲取打印機狀態
 export async function getPrinterStatus() {
