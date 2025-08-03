@@ -60,19 +60,28 @@ router.put('/', async (req, res) => {
   try {
     const { categories } = req.body;
     
-    let menu = await Menu.findOne();
-    if (!menu) {
-      menu = new Menu({ categories });
-    } else {
-      menu.categories = categories;
-      menu.lastUpdated = new Date();
-    }
+    // 查找或創建菜單
+    let menu = await Menu.findOneAndUpdate(
+      {},
+      { 
+        $set: { categories },
+        $currentDate: { lastUpdated: true }
+      },
+      { 
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true
+      }
+    );
 
-    await menu.save();
     res.json({ message: '菜單更新成功', menu });
   } catch (error) {
     console.error('更新菜單錯誤:', error);
-    res.status(500).json({ message: '服務器錯誤', error: error.message });
+    res.status(500).json({ 
+      message: '服務器錯誤', 
+      error: error.message,
+      stack: error.stack 
+    });
   }
 });
 
