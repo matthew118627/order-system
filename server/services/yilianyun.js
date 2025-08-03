@@ -264,6 +264,7 @@ export async function printOrder(items, orderNumber, phoneNumber = '') {
   try {
     console.log('\n=== 開始打印訂單 ===');
     console.log('訂單號:', orderNumber);
+    console.log('電話號碼:', phoneNumber || '未提供');
     
     // 獲取訪問令牌
     console.log('正在獲取訪問令牌...');
@@ -278,7 +279,9 @@ export async function printOrder(items, orderNumber, phoneNumber = '') {
     console.log('獲取訪問令牌成功');
     
     // 格式化訂單內容，傳遞電話號碼
+    console.log('調用 formatOrderContent 前，電話號碼:', phoneNumber || '空');
     const content = formatOrderContent(items, orderNumber, phoneNumber);
+    console.log('formatOrderContent 返回的內容:', content);
     
     // 構建請求參數
     const params = {
@@ -403,6 +406,14 @@ export async function printOrder(items, orderNumber, phoneNumber = '') {
 
 // 格式化訂單內容，創建簡潔環保的收據格式
 function formatOrderContent(items, orderNumber, phoneNumber = '') {
+  console.log('formatOrderContent 被調用，參數:', { 
+    itemsLength: items.length, 
+    orderNumber, 
+    phoneNumber,
+    phoneNumberType: typeof phoneNumber,
+    phoneNumberTrimmed: phoneNumber ? phoneNumber.trim() : '空'
+  });
+  
   // 初始化內容數組
   const content = [];
   
@@ -425,8 +436,13 @@ function formatOrderContent(items, orderNumber, phoneNumber = '') {
   const totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
   
   // 添加表頭
+  console.log('準備添加電話號碼到收據，phoneNumber:', phoneNumber);
   if (phoneNumber && phoneNumber.trim()) {
-    content.push(`<FS2>${phoneNumber}</FS2>`);
+    const phoneLine = `<FS2>${phoneNumber}</FS2>`;
+    console.log('正在添加電話號碼行:', phoneLine);
+    content.push(phoneLine);
+  } else {
+    console.log('未添加電話號碼，因為 phoneNumber 為空或僅包含空白字符');
   }
   
   content.push(
