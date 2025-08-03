@@ -45,10 +45,9 @@ const OrderSummary = ({
     setPhoneNumber(value);
   };
 
-  const handlePrint = useCallback(() => {
-    console.log('準備調用 onPrintOrder，電話號碼:', phoneNumber);
+  const handlePrint = () => {
     onPrintOrder(phoneNumber);
-  }, [onPrintOrder, phoneNumber]);
+  };
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

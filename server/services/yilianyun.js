@@ -260,17 +260,7 @@ export async function getAccessToken() {
 }
 
 // 打印訂單
-export async function printOrder(orderData) {
-  // 從 orderData 中解構需要的數據
-  const { 
-    items, 
-    orderNumber, 
-    phoneNumber = '',
-    subtotal = 0
-  } = orderData;
-  
-  // 確保 phoneNumber 是字符串
-  const phoneNumberStr = phoneNumber ? String(phoneNumber).trim() : '';
+export async function printOrder(items, orderNumber, phoneNumber = '') {
   try {
     console.log('\n=== 開始打印訂單 ===');
     console.log('訂單號:', orderNumber);
@@ -289,18 +279,8 @@ export async function printOrder(orderData) {
     console.log('獲取訪問令牌成功');
     
     // 格式化訂單內容，傳遞電話號碼
-    console.log('調用 formatOrderContent 前，參數:', {
-      itemsLength: items ? items.length : 'undefined',
-      orderNumber,
-      phoneNumber: phoneNumberStr || '空'
-    });
-    
-    if (!items || !Array.isArray(items)) {
-      console.error('錯誤：items 不是數組或未定義', items);
-      throw new Error('無效的訂單項目');
-    }
-    
-    const content = formatOrderContent(items, orderNumber, phoneNumberStr);
+    console.log('調用 formatOrderContent 前，電話號碼:', phoneNumber || '空');
+    const content = formatOrderContent(items, orderNumber, phoneNumber);
     console.log('formatOrderContent 返回的內容:', content);
     
     // 構建請求參數
