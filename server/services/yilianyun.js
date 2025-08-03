@@ -479,13 +479,17 @@ function formatOrderContent(items, orderNumber, phoneNumber = '') {
   // 添加電話號碼（如果有）
   if (phoneNumber && phoneNumber.trim()) {
     console.log('正在添加電話號碼到收據底部:', phoneNumber);
+    // 添加分隔線
+    content.push('--------------------------------');
+    // 添加電話號碼
     content.push(phoneNumber.trim());
+    // 添加換行符確保打印完成
+    content.push('\n\n\n');
   } else {
     console.log('未添加電話號碼，因為 phoneNumber 為空或僅包含空白字符');
+    // 即使沒有電話號碼，也添加換行符確保打印完成
+    content.push('\n\n\n');
   }
-  
-  // 添加空行（確保打印完成）
-  content.push('\n\n\n');
   
   // 直接返回內容，不添加任何打印指令
   return content.join('\n');
