@@ -435,12 +435,19 @@ function formatOrderContent(items, orderNumber, phoneNumber = '') {
   const subtotal = items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
   const totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
   
+  // 添加客戶編號（從 phoneNumber 中提取 NUM: 後面的內容）
+  let displayNumber = orderNumber;
+  if (phoneNumber && phoneNumber.startsWith('NUM:')) {
+    displayNumber = phoneNumber.substring(4).trim() || orderNumber;
+  }
+
   // 添加表頭
   content.push(
     '鮮 有限公司',
     `時間:${dateStr}`,
+    `客戶編號: ${displayNumber}`,
     '--------------------------------',
-    '品名  數量  小計',
+    '品名            數量   金額',
     '--------------------------------'
   );
 
@@ -450,6 +457,8 @@ function formatOrderContent(items, orderNumber, phoneNumber = '') {
     const itemTotal = item.price * quantity;
     const formattedTotal = itemTotal.toFixed(1); // 保留一位小數
     const itemNumber = (index + 1).toString().padStart(2, '0'); // 兩位數序號
+
+
 
     // 添加商品行
     content.push(`${itemNumber}.${item.name}  ${quantity}個   $${formattedTotal}`);

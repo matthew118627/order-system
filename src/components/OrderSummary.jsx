@@ -31,7 +31,7 @@ const OrderSummary = ({
   onBack,
   isPrinting = false,
 }) => {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('NUM:');
   const total = subtotal; // 直接使用小计作为总计，不收取服务费
 
   const handleQuantityChange = (itemId, newQuantity) => {
@@ -40,9 +40,12 @@ const OrderSummary = ({
   };
 
   const handlePhoneNumberChange = (e) => {
-    // 只允许数字输入
-    const value = e.target.value.replace(/\D/g, '');
-    console.log('電話號碼輸入框變更:', value);
+    let value = e.target.value;
+    // 確保以 'NUM:' 開頭
+    if (!value.startsWith('NUM:')) {
+      value = 'NUM:' + value.replace(/^NUM:/, '');
+    }
+    console.log('電話/姓名輸入框變更:', value);
     setPhoneNumber(value);
   };
 
@@ -167,17 +170,26 @@ const OrderSummary = ({
           
           <TextField
             fullWidth
-            label="電話號碼 (選填)"
+            label="電話/姓名 (選填)"
             variant="outlined"
             value={phoneNumber}
             onChange={handlePhoneNumberChange}
             inputProps={{
-              inputMode: 'numeric',
-              pattern: '[0-9]*',
-              maxLength: 15,
+              maxLength: 30,
             }}
             sx={{ mb: 2 }}
-            placeholder="請輸入電話號碼"
+            placeholder="請輸入電話號碼或姓名"
+            InputProps={{
+              startAdornment: (
+                <span style={{ color: 'rgba(0, 0, 0, 0.6)', marginRight: '4px' }}>NUM:</span>
+              ),
+              sx: {
+                '& .MuiInputBase-input': {
+                  paddingLeft: '8px',
+                },
+              },
+            }}
+            sx={{ mb: 2 }}
           />
           <Button
             fullWidth

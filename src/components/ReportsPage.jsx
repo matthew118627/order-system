@@ -573,7 +573,7 @@ const ReportsPage = ({ onBack }) => {
             .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
             .map((order) => (
               <TableRow key={order._id}>
-                <TableCell>{order.orderNumber}</TableCell>
+                <TableCell>{order.displayNumber || order.orderNumber}</TableCell>
                 <TableCell>
                   {order.items.map((item, idx) => (
                     <div key={idx}>

@@ -158,8 +158,14 @@ router.get('/', async (req, res) => {
     const startTime = Date.now();
     
     // 查詢訂單（不分頁）
-    const orders = await Order.find(query)
+    let orders = await Order.find(query)
       .sort({ createdAt: -1 });
+      
+    // 添加 displayNumber 字段，顯示電話號碼（如果存在）
+    orders = orders.map(order => ({
+      ...order.toObject(),
+      displayNumber: order.phoneNumber || order.orderNumber
+    }));
       
     const total = orders.length;
     const queryTime = Date.now() - startTime;
