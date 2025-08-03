@@ -10,7 +10,9 @@
     "server": "node server/server.js",
     "start": "concurrently \"npm run server\" \"npm run dev\"",
     "start:prod": "node server/server.js",
-    "init:menu": "node server/scripts/initMenu.js"
+    "init:menu": "node server/scripts/initMenu.js",
+    "db:export": "node scripts/db-export.js",
+    "db:import": "node scripts/db-import.js"
   },
   "devDependencies": {
     "concurrently": "^9.2.0",
@@ -26,6 +28,7 @@
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "http-proxy-middleware": "^3.0.5",
+    "mongodb": "^6.18.0",
     "mongoose": "^8.16.4",
     "notistack": "^3.0.2",
     "react": "^19.1.0",

@@ -423,12 +423,17 @@ function formatOrderContent(items, orderNumber) {
 
   // 構建收據內容
   let content = [
-    '      鮮 有限公司',
+    '<CB><L>      鮮 有限公司</L></CB>',
     `時間:${dateStr}`,
     '----------------------------',
     '品名  數量  小計',
     '----------------------------'
   ];
+  
+  // 添加訂單號（如果存在）
+  if (orderNumber) {
+    content.splice(2, 0, `<CB>單號: ${orderNumber}</CB>`);
+  }
 
   // 添加每個商品
   items.forEach((item, index) => {
@@ -436,17 +441,23 @@ function formatOrderContent(items, orderNumber) {
     const itemTotal = item.price * quantity;
     const formattedTotal = itemTotal.toFixed(2);
 
-    // 添加商品行
+    // 添加商品行（移除前面的代碼，只顯示名稱）
     content.push(
-      `${String(index + 1).padStart(2, '0')}.${item.name} ${quantity}個   $${formattedTotal}`
+      `${item.name} ${quantity}個   $${formattedTotal}`
     );
 
-    // 如果有特別要求或備註，添加備註（使用放大和加粗效果）
-    if (item.specialRequest || item.notes) {
-      const note = item.specialRequest || item.notes;
-      // 使用 <CB> 標籤來實現加粗和放大效果
-      content.push(`    <CB>備註: ${note}</CB>`);
-    }
+    // 處理自定義菜品的備註
+    const note = item.specialRequest || item.notes || item.remarks || '';
+    // 處理備註陣列（如果存在）
+    const notes = Array.isArray(note) ? note : [note];
+    
+    // 添加所有備註（使用放大和加粗效果）
+    notes.forEach(noteItem => {
+      if (noteItem && noteItem.trim()) {
+        // 使用 <CB> 和 <L> 標籤來實現加粗和放大效果
+        content.push(`    <CB><L>備註: ${noteItem.trim()}</L></CB>`);
+      }
+    });
 
     // 添加分隔線
     content.push('----------------------------');

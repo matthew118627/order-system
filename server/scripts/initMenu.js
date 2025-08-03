@@ -9,13 +9,24 @@ dotenv.config();
 // Connect to MongoDB
 const connectDB = async () => {
   try {
+    console.log('正在嘗試連接到 MongoDB...');
+    console.log('連接字串:', process.env.MONGODB_URI);
+    
     await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      // 移除了已棄用的選項
+      serverSelectionTimeoutMS: 5000, // 5秒超時
     });
-    console.log('MongoDB connected');
+    
+    console.log('MongoDB 連接成功');
+    
+    // 測試連接
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    console.log('可用的集合:', collections.map(c => c.name));
+    
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('MongoDB 連接錯誤:', error.message);
+    console.error('錯誤代碼:', error.codeName);
+    console.error('完整錯誤:', error);
     process.exit(1);
   }
 };
