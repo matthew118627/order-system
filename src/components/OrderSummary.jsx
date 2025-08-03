@@ -42,10 +42,15 @@ const OrderSummary = ({
   const handlePhoneNumberChange = (e) => {
     // 只允许数字输入
     const value = e.target.value.replace(/\D/g, '');
+    console.log('電話號碼輸入框變更:', value);
     setPhoneNumber(value);
   };
 
   const handlePrint = () => {
+    console.log('點擊打印按鈕，準備發送打印請求');
+    console.log('傳遞的電話號碼:', phoneNumber);
+    console.log('訂單項目:', items);
+    
     onPrintOrder(phoneNumber);
   };
 

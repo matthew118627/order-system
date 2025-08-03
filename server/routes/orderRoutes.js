@@ -22,12 +22,16 @@ router.post('/', async (req, res) => {
     // 生成訂單號
     const orderNumber = await Order.generateOrderNumber();
     
+    // 從請求體中獲取電話號碼
+    const { phoneNumber } = req.body;
+    
     // 創建訂單
     const order = new Order({
       orderNumber,
       items,
       subtotal,
       customerNotes,
+      phoneNumber: phoneNumber || '',
       status: 'pending'
     });
 
@@ -35,8 +39,8 @@ router.post('/', async (req, res) => {
     const savedOrder = await order.save();
     
     try {
-      // 嘗試打印訂單
-      const printTaskId = await printOrder(items, orderNumber);
+      // 嘗試打印訂單，傳遞電話號碼
+      const printTaskId = await printOrder(items, orderNumber, phoneNumber);
       
       // 更新訂單打印狀態
       savedOrder.printStatus = 'printed';

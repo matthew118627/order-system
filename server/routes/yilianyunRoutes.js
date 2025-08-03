@@ -24,7 +24,8 @@ router.get('/token', async (req, res) => {
 // 打印訂單
 router.post('/print', async (req, res) => {
   try {
-    const { machineCode, content, originId } = req.body;
+    const { machineCode, content, originId, phoneNumber } = req.body;
+    console.log('收到打印請求，電話號碼:', phoneNumber || '未提供');
     
     if (!machineCode || !content) {
       return res.status(400).json({
@@ -33,7 +34,7 @@ router.post('/print', async (req, res) => {
       });
     }
 
-    const result = await printOrder(machineCode, content, originId);
+    const result = await printOrder(machineCode, content, originId, phoneNumber);
     res.json({
       success: true,
       data: result
