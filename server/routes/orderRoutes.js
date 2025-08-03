@@ -318,6 +318,7 @@ router.post('/:orderNumber/reprint', async (req, res) => {
 
 // 重新列印訂單
 router.post('/reprint', async (req, res) => {
+  let order;
   try {
     const { orderId, items, orderNumber, phoneNumber } = req.body;
     
@@ -329,7 +330,7 @@ router.post('/reprint', async (req, res) => {
     }
 
     // 查找訂單
-    const order = await Order.findById(orderId);
+    order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({
         success: false,

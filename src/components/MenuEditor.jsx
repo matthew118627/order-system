@@ -18,7 +18,13 @@ const MenuEditor = ({ open, onClose, onMenuUpdate }) => {
     name: '',
     price: 0,
     type: 'simple',
-    methods: []
+    methods: [],
+    ingredients: [] // 新增：存儲材料列表
+  });
+  
+  const [newIngredient, setNewIngredient] = useState({
+    name: '',
+    price: 0
   });
   const [newCategory, setNewCategory] = useState({
     id: '',
@@ -64,6 +70,8 @@ const MenuEditor = ({ open, onClose, onMenuUpdate }) => {
     const newItemWithId = {
       ...newItem,
       id: newItem.id || `item-${Date.now()}`,
+      // 確保 ingredients 數組存在
+      ingredients: newItem.ingredients || []
     };
 
     updatedCategories[currentTab] = {
@@ -189,7 +197,21 @@ const MenuEditor = ({ open, onClose, onMenuUpdate }) => {
               <ListItem>
                 <ListItemText
                   primary={item.name}
-                  secondary={`$${item.price}${item.type === 'with-method' ? ` (${item.methods?.join(' / ')})` : ''}`}
+                  secondary={
+                    <>
+                      <span>${item.price}</span>
+                      {item.type === 'with-method' && (
+                        <>
+                          {item.methods?.length > 0 && (
+                            <span> ({item.methods.join(' / ')})</span>
+                          )}
+                          {item.ingredients?.length > 0 && (
+                            <span> | 可選: {item.ingredients.map(i => i.name).join(', ')}</span>
+                          )}
+                        </>
+                      )}
+                    </>
+                  }
                 />
                 <ListItemSecondaryAction>
                   <IconButton edge="end" onClick={() => handleEditItem(item)}>
@@ -253,21 +275,109 @@ const MenuEditor = ({ open, onClose, onMenuUpdate }) => {
               </FormControl>
             </Grid>
             {newItem.type === 'with-method' && (
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="做法 (用逗號分隔)"
-                  value={newItem.methods?.join(', ')}
-                  onChange={(e) =>
-                    setNewItem({
-                      ...newItem,
-                      methods: e.target.value.split(',').map((m) => m.trim())
-                    })
-                  }
-                  margin="normal"
-                  helperText="例如：冬菜蒸, 薑葱炒"
-                />
-              </Grid>
+              <>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="做法 (用逗號分隔)"
+                    value={newItem.methods?.join(', ') || ''}
+                    onChange={(e) =>
+                      setNewItem({
+                        ...newItem,
+                        methods: e.target.value.split(',').map((m) => m.trim())
+                      })
+                    }
+                    margin="normal"
+                    helperText="例如：冬菜蒸, 薑葱炒"
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    材料選項（可選）
+                  </Typography>
+                  <Box sx={{ mb: 2, p: 2, border: '1px solid #eee', borderRadius: 1 }}>
+                    <Grid container spacing={2} alignItems="center">
+                      <Grid item xs={5}>
+                        <TextField
+                          fullWidth
+                          label="材料名稱"
+                          value={newIngredient.name}
+                          onChange={(e) => setNewIngredient({...newIngredient, name: e.target.value})}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={4}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="加價"
+                          value={newIngredient.price}
+                          onChange={(e) => setNewIngredient({...newIngredient, price: Number(e.target.value) || 0})}
+                          size="small"
+                          InputProps={{
+                            startAdornment: <span style={{marginRight: 8}}>+$</span>,
+                          }}
+                        />
+                      </Grid>
+                      <Grid item xs={3}>
+                        <Button
+                          fullWidth
+                          variant="outlined"
+                          size="small"
+                          onClick={() => {
+                            if (!newIngredient.name) return;
+                            setNewItem({
+                              ...newItem,
+                              ingredients: [...(newItem.ingredients || []), {...newIngredient}]
+                            });
+                            setNewIngredient({ name: '', price: 0 });
+                          }}
+                        >
+                          添加
+                        </Button>
+                      </Grid>
+                    </Grid>
+                    
+                    {/* 已添加的材料列表 */}
+                    {(newItem.ingredients || []).length > 0 && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="caption" display="block" color="textSecondary">
+                          已添加的材料:
+                        </Typography>
+                        <List dense>
+                          {newItem.ingredients.map((ing, idx) => (
+                            <ListItem 
+                              key={idx} 
+                              sx={{ py: 0.5, pl: 2 }}
+                              secondaryAction={
+                                <IconButton 
+                                  edge="end" 
+                                  size="small"
+                                  onClick={() => {
+                                    const updatedIngredients = [...(newItem.ingredients || [])];
+                                    updatedIngredients.splice(idx, 1);
+                                    setNewItem({
+                                      ...newItem,
+                                      ingredients: updatedIngredients
+                                    });
+                                  }}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              }
+                            >
+                              <ListItemText 
+                                primary={`${ing.name} +${ing.price}`}
+                                primaryTypographyProps={{ variant: 'body2' }}
+                              />
+                            </ListItem>
+                          ))}
+                        </List>
+                      </Box>
+                    )}
+                  </Box>
+                </Grid>
+              </>
             )}
           </Grid>
           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>

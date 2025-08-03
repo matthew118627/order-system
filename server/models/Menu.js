@@ -1,12 +1,22 @@
 import mongoose from 'mongoose';
 
+const ingredientSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  price: { type: Number, required: true, min: 0 }
+}, { _id: false });
+
 const menuItemSchema = new mongoose.Schema({
   id: { type: String, required: true },
   name: { type: String, required: true },
-  price: { type: Number, required: true },
-  type: { type: String, default: 'simple' },
+  price: { type: Number, required: true, min: 0 },
+  type: { 
+    type: String, 
+    enum: ['simple', 'with-method'],
+    default: 'simple' 
+  },
   baseName: { type: String },
   methods: [{ type: String }],
+  ingredients: [ingredientSchema],
   description: { type: String }
 }, { _id: false });
 

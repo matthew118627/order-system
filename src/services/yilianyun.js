@@ -8,9 +8,8 @@ const CLIENT_ID = '1048944806';
 const CLIENT_SECRET = 'c23232d900d7a255c16eccc20b08a7c8';
 const MACHINE_CODE = '4004933591';
 
-// 後端 API 基礎 URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  (import.meta.env.DEV ? 'http://localhost:3001/api' : 'https://order-system-production-9479.up.railway.app/api');
+// 導入 API 基礎 URL 配置
+import { API_BASE_URL } from '../config';
 
 console.log('易聯雲 API 基礎 URL:', API_BASE_URL);
 

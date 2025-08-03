@@ -1,8 +1,9 @@
-// 始終使用生產環境 API 網址
-const API_BASE_URL = 'https://order-system-production-9479.up.railway.app';
-const API_URL = `${API_BASE_URL}/api/menu`;
+// 導入 API 基礎 URL 配置
+import { API_BASE_URL } from '../config';
 
-console.log('API 配置:', {
+const API_URL = `${API_BASE_URL}/menu`;
+
+console.log('菜單服務 API 配置:', {
   hostname: window.location.hostname,
   href: window.location.href,
   API_BASE_URL,

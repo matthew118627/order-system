@@ -9,7 +9,7 @@ import InfoIcon from '@mui/icons-material/Info';
 
 const MenuItem = ({ item, onAddToOrder }) => {
   const [selectedMethod, setSelectedMethod] = useState('');
-  const [selectedIngredient, setSelectedIngredient] = useState(null);
+  const [selectedIngredients, setSelectedIngredients] = useState([]);
   const [selectedAddOns, setSelectedAddOns] = useState([]);
   const [specialRequest, setSpecialRequest] = useState('');
   const [quantity, setQuantity] = useState(1);
@@ -17,7 +17,7 @@ const MenuItem = ({ item, onAddToOrder }) => {
   useEffect(() => {
     // Reset form when item changes
     setSelectedMethod('');
-    setSelectedIngredient(null);
+    setSelectedIngredients([]);
     setSelectedAddOns([]);
     setSpecialRequest('');
     setQuantity(1);
@@ -32,17 +32,20 @@ const MenuItem = ({ item, onAddToOrder }) => {
       itemName = `${selectedMethod}${itemName}`;
     }
     
-    // 处理主料选择
-    if (item.type === 'with-ingredient' && selectedIngredient) {
-      itemName = `${itemName} ${selectedIngredient.name}`;
-      finalPrice += selectedIngredient.price || 0;
+    // 处理已选材料
+    if (selectedIngredients.length > 0) {
+      const ingredientsText = selectedIngredients.map(ing => ing.name).join('、');
+      const ingredientsPrice = selectedIngredients.reduce((sum, ing) => sum + (ing.price || 0), 0);
+      itemName += ` (加: ${ingredientsText})`;
+      finalPrice += ingredientsPrice;
     }
     
     // 处理加配项
     if (selectedAddOns.length > 0) {
       const addOnsText = selectedAddOns.map(addOn => addOn.name).join('、');
+      const addOnsPrice = selectedAddOns.reduce((sum, addOn) => sum + (addOn.price || 0), 0);
       itemName += ` (加配: ${addOnsText})`;
-      finalPrice += selectedAddOns.reduce((sum, addOn) => sum + (addOn.price || 0), 0);
+      finalPrice += addOnsPrice;
     }
 
     onAddToOrder({
@@ -64,8 +67,7 @@ const MenuItem = ({ item, onAddToOrder }) => {
   };
 
   const isAddButtonDisabled = 
-    (item.type === 'with-method' && !selectedMethod) ||
-    (item.type === 'with-ingredient' && !selectedIngredient);
+    (item.type === 'with-method' && !selectedMethod);
 
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
@@ -99,11 +101,8 @@ const MenuItem = ({ item, onAddToOrder }) => {
               <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
                 請選擇做法：
               </Typography>
-              <Tooltip title="請選擇一種做法">
-                <InfoIcon color="action" fontSize="small" sx={{ ml: 0.5 }} />
-              </Tooltip>
             </Box>
-            <Box display="flex" gap={1} flexWrap="wrap">
+            <Box display="flex" flexWrap="wrap" gap={1}>
               {item.methods?.map((method) => (
                 <Chip
                   key={method}
@@ -111,26 +110,36 @@ const MenuItem = ({ item, onAddToOrder }) => {
                   onClick={() => setSelectedMethod(method)}
                   color={selectedMethod === method ? 'primary' : 'default'}
                   variant={selectedMethod === method ? 'filled' : 'outlined'}
+                  size="small"
                 />
               ))}
             </Box>
           </Box>
         )}
 
-        {/* 主料选择 */}
-        {item.type === 'with-ingredient' && item.ingredients && (
+        {/* 材料選擇 */}
+        {item.ingredients?.length > 0 && (
           <Box mb={2}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 'medium', mb: 1 }}>
-              請選擇主料：
-            </Typography>
-            <Box display="flex" gap={1} flexWrap="wrap">
-              {item.ingredients.map((ing) => (
+            <Box display="flex" alignItems="center" mb={1}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'medium' }}>
+                可選材料：
+              </Typography>
+            </Box>
+            <Box display="flex" flexWrap="wrap" gap={1}>
+              {item.ingredients.map((ingredient, index) => (
                 <Chip
-                  key={ing.emoji}
-                  label={`${ing.emoji} ${ing.name}`}
-                  onClick={() => setSelectedIngredient(ing)}
-                  color={selectedIngredient?.emoji === ing.emoji ? 'primary' : 'default'}
-                  variant={selectedIngredient?.emoji === ing.emoji ? 'filled' : 'outlined'}
+                  key={index}
+                  label={`${ingredient.name} +${ingredient.price}`}
+                  onClick={() => {
+                    setSelectedIngredients(prev => 
+                      prev.some(i => i.name === ingredient.name)
+                        ? prev.filter(i => i.name !== ingredient.name)
+                        : [...prev, ingredient]
+                    );
+                  }}
+                  color={selectedIngredients.some(i => i.name === ingredient.name) ? 'primary' : 'default'}
+                  variant={selectedIngredients.some(i => i.name === ingredient.name) ? 'filled' : 'outlined'}
+                  size="small"
                 />
               ))}
             </Box>

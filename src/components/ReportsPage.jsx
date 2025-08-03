@@ -111,7 +111,7 @@ const ReportsPage = ({ onBack }) => {
     >
       <DialogTitle>確認取消訂單</DialogTitle>
       <DialogContent>
-        <Typography>確定要取消訂單 {orderToCancel?.orderNumber} 嗎？此操作無法還原。</Typography>
+        <Typography>確定要取消訂單 {selectedOrder?.orderNumber} 嗎？此操作無法還原。</Typography>
       </DialogContent>
       <DialogActions>
         <Button 
@@ -143,7 +143,7 @@ const ReportsPage = ({ onBack }) => {
   // 處理菜單關閉
   const handleMenuClose = () => {
     setMenuAnchorEl(null);
-    setSelectedOrder(null);
+    // 不要在這裡清空 selectedOrder，因為在取消訂單對話框中還需要用到
   };
 
   // 重新列印訂單
@@ -157,8 +157,8 @@ const ReportsPage = ({ onBack }) => {
         itemId: item.itemId || item.id?.split('-')[0] || 'default-id' // 確保 itemId 不為空
       }));
 
-      // 調用重新列印端點 - 修正了 API 路徑
-      const response = await fetch(`${API_BASE_URL}/reprint`, {
+      // 調用重新列印端點
+      const response = await fetch(`${API_BASE_URL}/orders/reprint`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,7 +180,7 @@ const ReportsPage = ({ onBack }) => {
       showSnackbar('訂單已重新發送到打印機', 'success');
     } catch (error) {
       console.error('重新列印訂單時出錯:', error);
-      showSnackbar(`重新列印失敗: ${error.message}`, 'error');
+      
     } finally {
       handleMenuClose();
     }
@@ -188,10 +188,16 @@ const ReportsPage = ({ onBack }) => {
 
   // 取消訂單
   const handleCancelOrder = async () => {
-    if (!selectedOrder) return;
+    if (!selectedOrder) {
+      console.error('沒有選中要取消的訂單');
+      showSnackbar('請先選擇要取消的訂單', 'error');
+      return;
+    }
     
     try {
+      console.log('開始取消訂單:', selectedOrder._id);
       setCanceling(true);
+      
       const url = `${API_BASE_URL}/orders/${selectedOrder._id}`;
       console.log('發送取消訂單請求到:', url);
       
@@ -203,15 +209,26 @@ const ReportsPage = ({ onBack }) => {
         body: JSON.stringify({ status: 'cancelled' })
       });
       
-      const responseData = await response.json().catch(() => ({}));
+      const responseData = await response.json().catch((error) => {
+        console.error('解析響應數據時出錯:', error);
+        return {};
+      });
+      
+      console.log('後端響應:', {
+        status: response.status,
+        ok: response.ok,
+        data: responseData
+      });
       
       if (!response.ok) {
+        const errorMessage = responseData.message || response.statusText || '未知錯誤';
         console.error('後端返回錯誤:', {
           status: response.status,
           statusText: response.statusText,
-          data: responseData
+          data: responseData,
+          error: errorMessage
         });
-        throw new Error(`取消訂單失敗 (${response.status}): ${responseData.message || response.statusText}`);
+        throw new Error(`取消訂單失敗 (${response.status}): ${errorMessage}`);
       }
       
       console.log('訂單取消成功:', responseData);
@@ -219,22 +236,27 @@ const ReportsPage = ({ onBack }) => {
       // 更新本地狀態
       const updatedOrders = orders.map(order => 
         order._id === selectedOrder._id 
-          ? { ...order, status: 'cancelled', updatedAt: new Date().toISOString() } 
+          ? { 
+              ...order, 
+              status: 'cancelled', 
+              updatedAt: new Date().toISOString(),
+              cancelledAt: new Date().toISOString()
+            } 
           : order
       );
       
       setOrders(updatedOrders);
-      setFilteredOrders(updatedOrders);
+      setFilteredOrders(updatedOrders); // 同時更新過濾後的訂單列表
+      
       showSnackbar('訂單已成功取消', 'success');
     } catch (error) {
       console.error('取消訂單時出錯:', error);
-      const errorMessage = error.message.includes('Failed to fetch') 
-        ? '無法連接到伺服器，請檢查網絡連接'
-        : error.message;
-      showSnackbar(errorMessage, 'error');
+      showSnackbar(`取消訂單失敗: ${error.message}`, 'error');
     } finally {
       setCanceling(false);
-      handleMenuClose();
+      setCancelDialogOpen(false);
+      setSelectedOrder(null);
+      setMenuAnchorEl(null); // 確保菜單關閉
     }
   };
 
@@ -796,7 +818,12 @@ const ReportsPage = ({ onBack }) => {
       </MenuItem>
       <MenuItem 
         onClick={() => {
-          setOrderToCancel(selectedOrder);
+          if (!selectedOrder) {
+            console.error('沒有選中要取消的訂單');
+            showSnackbar('請先選擇要取消的訂單', 'error');
+            handleMenuClose();
+            return;
+          }
           setCancelDialogOpen(true);
           handleMenuClose();
         }}
